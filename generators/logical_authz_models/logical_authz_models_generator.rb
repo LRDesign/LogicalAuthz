@@ -36,6 +36,7 @@ class LogicalAuthzModelsGenerator < Rails::Generator::Base
       manifest.migration_template "migrations/create_groups.rb.erb", "db/migrate", :migration_file_name => "create_groups", :assigns => template_data
       manifest.migration_template "migrations/create_permissions.rb.erb", "db/migrate", :migration_file_name => "create_permissions", :assigns => template_data
       manifest.migration_template "migrations/create_users_groups.rb.erb", "db/migrate", :migration_file_name => "create_users_groups", :assigns => template_data
+      manifest.readme "README"
     end
   end
 end
