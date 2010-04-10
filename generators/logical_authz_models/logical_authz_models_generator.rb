@@ -22,7 +22,7 @@ class LogicalAuthzModelsGenerator < Rails::Generator::Base
       :user_field => options[:user_class].underscore,
       :permission_field => options[:permission_class].underscore,
       :group_field => options[:group_class].underscore,
-      :admin_group_name => options[:admin_group]
+      :admin_group => options[:admin_group]
     }
 
     record do |manifest|
