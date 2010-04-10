@@ -26,15 +26,16 @@ class LogicalAuthzModelsGenerator < Rails::Generator::Base
     }
 
     record do |manifest|
+      manifest.undefine_method(:sleep)
       manifest.class_collisions options[:group_class], options[:permission_class]
       manifest.template "app/models/group.rb.erb", "app/models/group.rb", :assigns => template_data
       manifest.template "app/models/permission.rb.erb", "app/models/permission.rb", :assigns => template_data
       manifest.template "config/initializers/logical_authz.rb.erb", "config/initializers/logical_authz.rb", :assigns => template_data
       manifest.template "db/seeds_logical_authz.rb.erb", "db/seeds_logical_authz.rb", :assigns => template_data
       manifest.migration_template "migrations/create_groups.rb.erb", "db/migrate", :migration_file_name => "create_groups", :assigns => template_data
-      sleep(1) #I have some not nice things to say about Rails::Generator
+      manifest.sleep(2) #I have some not nice things to say about Rails::Generator
       manifest.migration_template "migrations/create_permissions.rb.erb", "db/migrate", :migration_file_name => "create_permissions", :assigns => template_data
-      sleep(1)
+      manifest.sleep(2)
       manifest.migration_template "migrations/create_users_groups.rb.erb", "db/migrate", :migration_file_name => "create_users_groups", :assigns => template_data
     end
   end
