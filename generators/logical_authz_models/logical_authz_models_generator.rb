@@ -3,10 +3,12 @@ class LogicalAuthzModelsGenerator < Rails::Generator::Base
     opti.on("-u", "--user UserClass"){|val| options[:user_class] = val}
     opti.on("-p", "--permission PermissionClass"){|val| options[:permission_class] = val}
     opti.on("-g", "--group GroupClass"){|val| options[:group_class] = val}
+    opti.on("-A", "--admin AdminGroupName"){|val| options[:admin_group] = val}
   end
 
   default_options(:permission_class => "Permission", 
-                  :group_class => "Group")
+                  :group_class => "Group",
+                  :admin_group => "Administration")
 
   def manifest 
     raise "User class name (--user) is required!" unless options[:user_class]
@@ -16,14 +18,22 @@ class LogicalAuthzModelsGenerator < Rails::Generator::Base
       :group_class => options[:group_class],
       :user_table => options[:user_class].tableize,
       :permission_table => options[:permission_class].tableize,
-      :group_table => options[:group_class].tableize
+      :group_table => options[:group_class].tableize,
+      :user_field => options[:user_class].underscore,
+      :permission_field => options[:permission_class].underscore,
+      :group_field => options[:group_class].underscore,
+      :admin_group_name => options[:admin_group]
     }
 
     record do |manifest|
       manifest.class_collisions options[:group_class], options[:permission_class]
-      manifest.template "app/models/group.rb", "app/models/group.rb", :assigns => template_data
-      manifest.file "app/models/permission.rb", "app/models/permission.rb"
-      manifest.migration_template "setup_logical_authz.rb", "db/migrate", :migration_file_name => "setup_logical_authz"
+      manifest.template "app/models/group.rb.erb", "app/models/group.rb", :assigns => template_data
+      manifest.template "app/models/permission.rb.erb", "app/models/permission.rb", :assigns => template_data
+      manifest.template "config/initializers/logical_authz.rb.erb", "config/initializers/logical_authz.rb", :assigns => template_data
+      manifest.template "db/seeds_logical_authz.rb.erb", "db/seeds_logical_authz.rb", :assigns => template_data
+      manifest.migration_template "migrations/create_groups.rb.erb", "db/migrate", :migration_file_name => "setup_logical_authz", :assigns => template_data
+      manifest.migration_template "migrations/create_permissions.rb.erb", "db/migrate", :migration_file_name => "setup_logical_authz", :assigns => template_data
+      manifest.migration_template "migrations/create_users_groups.rb.erb", "db/migrate", :migration_file_name => "setup_logical_authz", :assigns => template_data
     end
   end
 end
