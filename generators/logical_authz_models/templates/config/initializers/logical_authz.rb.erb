@@ -12,9 +12,9 @@ require 'logical_authz/authn_facade/authlogic'
 #LogicalAuthz model
 #(You can set that up by passing a switch to the generator)
 #
-<%if permission_class != "Permission"
+<%if permission_class == "Permission"
 %>#<%end%>LogicalAuthz::set_permission_model(<%=permission_class%>) 
 
-<%if group_class != "Group"
+<%if group_class == "Group"
 %>#<%end%>LogicalAuthz::set_group_model(<%=group_class%>) 
 

@@ -5,7 +5,7 @@ class <%=group_class%> < ActiveRecord::Base
   has_many :<%=permission_table%>
 
   has_and_belongs_to_many :<%=user_table%>, :class_name => <%= user_class.inspect%>
-  alias <%=user_table%> members
+  alias members <%=user_table%> 
 
   # returns true if this group can do *action* on *controller* optional object
   def can?(action, controller, object = nil)

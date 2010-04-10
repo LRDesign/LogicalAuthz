@@ -9,7 +9,7 @@ admin_group = <%=group_class%>.create!(
 module LogicalAuthz
   module PermissionSeeds
     def self.create_permission(user, controller, action = nil, subject_id = nil)
-      LogicalAuthz::permission_model.create!(
+      <%=permission_class%>.create!(
         :group_id => user.id,
         :controller => controller,
         :action => action,
