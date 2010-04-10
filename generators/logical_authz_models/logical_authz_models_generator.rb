@@ -26,6 +26,7 @@ class LogicalAuthzModelsGenerator < Rails::Generator::Base
     }
 
     record do |manifest|
+      #Yeah, I know, and I'm sorry.  It should be okay, though.
       ActiveRecord::Base.timestamped_migrations = false
       manifest.class_collisions options[:group_class], options[:permission_class]
       manifest.template "app/models/group.rb.erb", "app/models/group.rb", :assigns => template_data
