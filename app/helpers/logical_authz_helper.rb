@@ -9,11 +9,11 @@ module LogicalAuthz
     end
 
     def permission_model
-      @perm_model ||= ::Permission rescue nil
+      @perm_model || ::Permission rescue nil
     end
 
     def group_model
-      @group_model ||= ::Group rescue nil
+      @group_model || ::Group rescue nil
     end
   end
 
