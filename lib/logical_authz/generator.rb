@@ -51,7 +51,7 @@ module LogicalAuthz
   Rails::Generator::Commands::Create.send :include, CommandExtensions::Create
   Rails::Generator::Commands::Destroy.send :include, CommandExtensions::Destroy
 
-  module Generator < Rails::Generator::Base
+  class Generator < Rails::Generator::Base
     def add_options!(opti)
       opti.on("-u", "--user UserClass"){|val| options[:user_class] = val}
       opti.on("-p", "--permission PermissionClass"){|val| options[:permission_class] = val}
