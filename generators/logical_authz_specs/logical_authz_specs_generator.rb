@@ -1,4 +1,8 @@
 class LogicalAuthzSpecsGenerator < LogicalAuthz::Generator
+  default_options(:permission_class => "Permission", 
+                  :group_class => "Group",
+                  :admin_group => "Administration")
+
   def manifest
     record do |manifest|
       manifest.template "spec/factories/az_accounts.rb.erb", "spec/factories/logical_authz_#{template_data[:user_table]}.rb", :assigns => template_data

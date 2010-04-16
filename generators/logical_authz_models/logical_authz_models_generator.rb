@@ -1,4 +1,8 @@
 class LogicalAuthzModelsGenerator < LogicalAuthz::Generator
+  default_options(:permission_class => "Permission", 
+                  :group_class => "Group",
+                  :admin_group => "Administration")
+
   def manifest 
     raise "User class name (--user) is required!" unless options[:user_class]
 

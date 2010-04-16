@@ -60,10 +60,6 @@ module LogicalAuthz
       opti.on("-A", "--admin AdminGroupName"){|val| options[:admin_group] = val}
     end
 
-    default_options(:permission_class => "Permission", 
-                    :group_class => "Group",
-                    :admin_group => "Administration")
-
     def template_data
       @template_data ||= {
         :user_class => options[:user_class],
