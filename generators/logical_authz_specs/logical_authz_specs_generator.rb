@@ -5,6 +5,11 @@ class LogicalAuthzSpecsGenerator < LogicalAuthz::Generator
 
   def manifest
     record do |manifest|
+      manifest.directory "spec/factories"
+      manifest.directory "spec/support"
+      manifest.directory "spec/controllers"
+      manifest.directory "spec/helpers"
+
       manifest.template "spec/factories/az_accounts.rb.erb", "spec/factories/logical_authz_#{template_data[:user_table]}.rb", :assigns => template_data
       manifest.template "spec/support/spec_helper.rb.erb", "spec/support/spec_helper.rb", :assigns => template_data
       manifest.template "spec/support/mock_auth.rb.erb", "spec/support/mock_auth.rb", :assigns => template_data
