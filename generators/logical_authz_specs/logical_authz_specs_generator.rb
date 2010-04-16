@@ -15,7 +15,7 @@ class LogicalAuthzSpecsGenerator < LogicalAuthz::Generator
       manifest.template "spec/support/mock_auth.rb.erb", "spec/support/mock_auth.rb", :assigns => template_data
       manifest.template "spec/controllers/permissions_controller_spec.rb.erb", "spec/controllers/#{template_data[:permission_table]}_controller_spec.rb", :assigns => template_data
       manifest.template "spec/controllers/groups_controller_spec.rb.erb", "spec/controllers/#{template_data[:group_table]}_controller_spec.rb", :assigns => template_data
-      manifest.template "spec/controllers/groups_users_controller_spec.rb.erb", "spec/controllers/#{template_data[:groups_table]}_#{template_data[:users_table]}_controller_spec.rb", :assigns => template_data
+      manifest.template "spec/controllers/groups_users_controller_spec.rb.erb", "spec/controllers/#{template_data[:group_table]}_#{template_data[:user_table]}_controller_spec.rb", :assigns => template_data
       manifest.template "spec/helpers/logical_authz_helper_spec.rb.erb", "spec/helpers/logical_authz_helper_spec.rb", :assigns => template_data
     end
   end
