@@ -11,7 +11,7 @@ module LogicalAuthz
         options_string << ":action => #{action}" unless action.nil?
         options_string << ":controller => #{controller}" unless controller.nil? 
         unless options.empty?
-          match = /\A{\s*(.*?)\s*}\Z/.match options.inspect
+          match = /\A\{\s*(.*?)\s*\}\Z/.match options.inspect
           options_string << match[1] unless match.nil?
         end
         options_string = options_string.join(", ")

@@ -1,5 +1,3 @@
-require 'logical_authz/generator'
-
 class LogicalAuthzModelsGenerator < LogicalAuthz::Generator
   def manifest 
     raise "User class name (--user) is required!" unless options[:user_class]
