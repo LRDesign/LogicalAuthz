@@ -1,5 +1,5 @@
 module LogicalAuthz
-  module CommandExtentions
+  module CommandExtensions
     module Common
       def route_code(name, path, options)
         options = options.dup
@@ -47,6 +47,7 @@ module LogicalAuthz
       end
     end
   end
+
   Rails::Generator::Commands::List.send :include, CommandExtensions::List
   Rails::Generator::Commands::Create.send :include, CommandExtensions::Create
   Rails::Generator::Commands::Destroy.send :include, CommandExtensions::Destroy
