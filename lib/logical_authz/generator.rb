@@ -22,28 +22,29 @@ module LogicalAuthz
 
     module Create
       include Common
-      def route(name, path, options)
+      def named_route(name, path, options)
         sentinel = 'ActionController::Routing::Routes.draw do |map|'
-        logger.route route_code(route_options)
+        insert = route_code(name, path, route_options)
+        logger.add_named_route insert
         gsub_file 'config/routes.rb', /(#{Regexp.escape(sentinel)})/m do |m|
-          "#{m}\n  #{route_code(name, path, options)}\n"
+          "#{m}\n  #{insert}\n"
         end
       end
     end
 
     module Destroy
       include Common
-      def route(name, path, options)
-        logger.remove_route route_code(route_options)
-        to_remove = "\n  #{route_code(route_options)}"
-        gsub_file 'config/routes.rb', /(#{to_remove})/mi, ''
+      def named_route(name, path, options)
+        code = route_code(name, path, options)
+        logger.remove_route code
+        gsub_file 'config/routes.rb', /^\s*#{code}/mi, ''
       end
     end
 
     module List
       include Common
-      def route(name, path, options)
-        logger.routing route_code(name, path, options)
+      def named_route(name, path, options)
+        logger.add_named_route route_code(name, path, options)
       end
     end
   end
