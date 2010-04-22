@@ -8,11 +8,13 @@ module LogicalAuthz
         controller = options.delete(:controller)
         controller ||= options.delete(:controller)
         options_string = []
-        options_string << ":action => #{action}" unless action.nil?
-        options_string << ":controller => #{controller}" unless controller.nil? 
+        options_string << ":action => #{action.inspect}" unless action.nil?
+        options_string << ":controller => #{controller.inspect}" unless controller.nil? 
         unless options.empty?
           match = /\A\{\s*(.*?)\s*\}\Z/.match options.inspect
-          options_string << match[1] unless match.nil?
+          remaining_options = match[1]
+          remaining_options.gsub!(/([{}]|=>)/){|m| " #{m} "}
+          options_string << remaining_options
         end
         options_string = options_string.join(", ")
 
