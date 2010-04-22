@@ -10,13 +10,16 @@ class LogicalAuthzSpecsGenerator < LogicalAuthz::Generator
       manifest.directory "spec/controllers"
       manifest.directory "spec/helpers"
 
-      manifest.template "spec/factories/az_accounts.rb.erb", "spec/factories/logical_authz_#{template_data[:user_table]}.rb", :assigns => template_data
-      manifest.template "spec/support/spec_helper.rb.erb", "spec/support/spec_helper.rb", :assigns => template_data
-      manifest.template "spec/support/mock_auth.rb.erb", "spec/support/mock_auth.rb", :assigns => template_data
-      manifest.template "spec/controllers/permissions_controller_spec.rb.erb", "spec/controllers/#{template_data[:permission_table]}_controller_spec.rb", :assigns => template_data
-      manifest.template "spec/controllers/groups_controller_spec.rb.erb", "spec/controllers/#{template_data[:group_table]}_controller_spec.rb", :assigns => template_data
-      manifest.template "spec/controllers/groups_users_controller_spec.rb.erb", "spec/controllers/#{template_data[:group_table]}_#{template_data[:user_table]}_controller_spec.rb", :assigns => template_data
-      manifest.template "spec/helpers/logical_authz_helper_spec.rb.erb", "spec/helpers/logical_authz_helper_spec.rb", :assigns => template_data
+      manifest.with_options :assigns => template_data do |templ|
+        templ.template "spec/factories/az_accounts.rb.erb", "spec/factories/logical_authz_#{template_data[:user_table]}.rb"
+        templ.template "spec/factories/az_groups.rb.erb", "spec/factories/logical_authz_#{template_data[:group_table]}.rb"
+        templ.template "spec/support/spec_helper.rb.erb", "spec/support/spec_helper.rb"
+        templ.template "spec/support/mock_auth.rb.erb", "spec/support/mock_auth.rb"
+        templ.template "spec/controllers/permissions_controller_spec.rb.erb"
+        templ.template "spec/controllers/groups_controller_spec.rb.erb"
+        templ.template "spec/controllers/groups_users_controller_spec.rb.erb"
+        templ.template "spec/helpers/logical_authz_helper_spec.rb.erb"
+      end
     end
   end
 end
