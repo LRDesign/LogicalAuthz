@@ -27,7 +27,7 @@ module LogicalAuthz
         insert = route_code(name, path, options)
         logger.add_named_route insert
         gsub_file 'config/routes.rb', /(#{Regexp.escape(sentinel)})/m do |m|
-          "#{m}\n  #{insert}\n"
+          "#{m}\n  #{insert}"
         end
       end
     end
