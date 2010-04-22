@@ -24,7 +24,7 @@ module LogicalAuthz
       include Common
       def named_route(name, path, options)
         sentinel = 'ActionController::Routing::Routes.draw do |map|'
-        insert = route_code(name, path, route_options)
+        insert = route_code(name, path, options)
         logger.add_named_route insert
         gsub_file 'config/routes.rb', /(#{Regexp.escape(sentinel)})/m do |m|
           "#{m}\n  #{insert}\n"
