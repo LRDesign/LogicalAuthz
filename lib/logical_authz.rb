@@ -59,6 +59,10 @@ module LogicalAuthz
     if criteria[:group].empty?
       criteria[:group] += unauthorized_groups
     end
+    criteria[:groups], not_groups = criteria[:groups].partition do |group|
+      LogicalAuthz::group_model === group
+    end
+    Rails.logger.warn "Found in criteria[:groups]: #{not_groups.inspect}"
 
     #TODO Fail if group unspecified and user unspecified?
 
