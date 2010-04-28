@@ -72,7 +72,7 @@ module LogicalAuthz
     end.flatten + actions.map{|action| action.to_sym}
 
     controller_class.authorization_procs.each do |prok|
-      approval = prok.call(criteria[:user], criteria) #Tempted to remove the user param
+      approval = prok.call(criteria[:user], criteria.dup) #Tempted to remove the user param
       next if approval == false
       next if approval.blank?
       return true
