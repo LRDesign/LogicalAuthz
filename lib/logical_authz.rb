@@ -50,6 +50,8 @@ module LogicalAuthz
       end
     end
 
+    return true unless controller_class.authorization_needed?(criteria[:action])
+
     #TODO Fail if controller unspecified?
 
     criteria[:group] = criteria[:group].nil? ? [] : [*criteria[:group]]
@@ -136,6 +138,15 @@ module LogicalAuthz
         end
       end
 
+      def authorization_needed?(action)
+        return true if read_inheritable_attribute(:whole_controller_authorization)
+        if action.nil?
+          return !read_inheritable_attribute(:requires_action_authorization).nil?
+        end
+        return true if ( read_inheritable_attribute(:requires_action_authorization) || [] ).include?(action.to_sym)
+        return false
+      end
+
       def grant_aliases(hash)
         aliases = read_inheritable_attribute(:grant_alias_hash) || Hash.new{|h,k| h[k] = []}
         hash.each_pair do |grant, allows|
@@ -178,9 +189,7 @@ module LogicalAuthz
 
     class CheckAuthorization
       def self.filter(controller)
-        if controller.class.read_inheritable_attribute(:whole_controller_authorization)
-          return controller.check_authorized
-        elsif (controller.class.read_inheritable_attribute(:requires_action_authorization) || []).include?(controller.action_name.to_sym)
+        if controller.class.authorization_needed?(controller.action_name)
           return controller.check_authorized
         else
           return true
