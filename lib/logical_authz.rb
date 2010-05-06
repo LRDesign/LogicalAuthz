@@ -147,6 +147,8 @@ module LogicalAuthz
         return false
       end
 
+      # grant_aliases :new => :create  # =>
+      # anyone with :new permission can do :create
       def grant_aliases(hash)
         aliases = read_inheritable_attribute(:grant_alias_hash) || Hash.new{|h,k| h[k] = []}
         hash.each_pair do |grant, allows|
