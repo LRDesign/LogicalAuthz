@@ -18,7 +18,7 @@ module LogicalAuthz
         end
         options_string = options_string.join(", ")
 
-        "map.#{name} '#{path.to_s}' #{options_string}"
+        "map.#{name} '#{path.to_s}', #{options_string}"
       end
     end
 
@@ -28,8 +28,12 @@ module LogicalAuthz
         sentinel = 'ActionController::Routing::Routes.draw do |map|'
         insert = route_code(name, path, options)
         logger.add_named_route insert
-        gsub_file 'config/routes.rb', /(#{Regexp.escape(sentinel)})/m do |m|
-          "#{m}\n  #{insert}"
+        if File::open('config/routes.rb').grep(/#{Regexp.escape(insert)}/)
+          puts "exists: #{insert}"
+        else
+          gsub_file 'config/routes.rb', /(#{Regexp.escape(sentinel)})/m do |m|
+            "#{m}\n  #{insert}"
+          end
         end
       end
     end

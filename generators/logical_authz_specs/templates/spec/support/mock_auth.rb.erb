@@ -20,10 +20,10 @@ module LogicalAuthz
     end
 
     def login_as(user)
-      if AzAccount === user
+      if <%= user_class %> === user
         AuthnFacade.current_user = user
       else
-        AuthnFacade.current_user = az_accounts(user)
+        AuthnFacade.current_user = Factory(user)
       end
     end
   end

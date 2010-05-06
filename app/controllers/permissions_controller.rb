@@ -1,5 +1,4 @@
 class PermissionsController < AuthzController                
-  unloadable 
   needs_authorization
   admin_authorized
 

@@ -1,5 +1,4 @@
 class GroupsController < AuthzController
-  unloadable
   
   PER_PAGE = 20
 
