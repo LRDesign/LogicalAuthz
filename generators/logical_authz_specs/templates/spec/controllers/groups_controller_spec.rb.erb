@@ -38,23 +38,17 @@ describe GroupsController do
     describe "GET show" do
       before(:each) do
         @group = Factory.create(:group, :name => 'foo')
-        @group.members << @user1 = Factory.create(:authz_account)
-        @group.members << @user2 = Factory.create(:authz_account)        
       end
+
       it "should find and expose the requested group as @group" do
         get :show, :id => @group.id
         assigns[:group].should == @group
-      end
-      
-      it "should find the group's users" do
-        get :show, :id => @group.id
-        assigns[:users].should == [ @user1, @user2 ]
       end
     end
    
     describe "POST create" do
       describe "with valid params" do        
-        it "creates a new group and assings it as @group" do
+        it "creates a new group and assigns it as @group" do
           lambda do 
             post :create, :group => { :name => "foo group" }
           end.should change(Group, :count).by(1)
