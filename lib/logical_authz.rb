@@ -178,6 +178,21 @@ module LogicalAuthz
         read_inheritable_attribute(:dynamic_authorization_procs) || []
       end
 
+      def owner_authorized(*actions)
+        actions.map!{|action| action.to_sym}
+        dynamic_authorization do |user, criteria|
+          unless actions.nil? or actions.empty?
+            return false if (actions & criteria[:action_aliases]).empty?
+          end
+          return false unless criteria.has_key?(:user) and criteria.has_key?(:id)
+          if block_given?
+            yield(criteria[:user], criteria[:id].to_i)
+          else
+            criteria[:user].id == criteria[:id].to_i
+          end
+        end
+      end
+
       def admin_authorized(*actions)
         actions.map!{|action| action.to_sym}
         dynamic_authorization do |user, criteria|
