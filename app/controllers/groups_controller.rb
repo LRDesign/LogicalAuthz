@@ -36,7 +36,7 @@ class GroupsController < AuthzController
     respond_to do |format|
       if @group.save
         flash[:notice] = 'Group was successfully created.'
-        format.html { redirect_to(admin_groups_path) }
+        format.html { redirect_to(groups_path) }
         format.xml  { render :xml => @group, :status => :created, :location => @group }
       else
         format.html { render :action => "new" }
@@ -52,7 +52,7 @@ class GroupsController < AuthzController
     @group.destroy
 
     respond_to do |format|
-      format.html { redirect_to(admin_groups_url) }
+      format.html { redirect_to(groups_url) }
       format.xml  { head :ok }
     end
   end

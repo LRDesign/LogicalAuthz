@@ -63,7 +63,7 @@ describe GroupsController do
         
         it "redirects back" do
           post :create, :group => { :name => "foo group" }
-          response.should redirect_to(admin_groups_url)
+          response.should redirect_to(groups_url)
         end
       end
 
