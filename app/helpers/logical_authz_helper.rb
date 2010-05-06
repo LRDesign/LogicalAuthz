@@ -17,8 +17,6 @@ module LogicalAuthz
     end
   end
 
-
-
   module Helper
     def authorized?(criteria=nil)
       criteria ||= {}
@@ -35,5 +33,33 @@ module LogicalAuthz
     def nonmembered_groups(user)
       (LogicalAuthz::group_model.all - user.groups).map { |g| [ g.name, g.id ] }
     end    
+
+    def authorized_url?(options)
+      params = {}
+      if Hash === options
+        params = options
+      else
+        path = url_for(options)
+        path, querystring = path.split('?')
+        params = ActionController::Routing::Routes.recognize_path(path, :method => method)
+        querystring.blank? ? params : params.merge(Rack::Utils.parse_query(querystring).symbolize_keys!)
+      end
+      authorized?(params)
+    end
+
+    def authorized_menu(*items)
+      authzd = items.find do |item|
+        authorized_url? item
+      end
+      yield(items) unless authzd.nil?
+    end
+
+    #Still experimental
+    def link_to_if_authorized(name, options = nil, html_options = nil, &block)
+      options ||= {}
+      html_options ||= {}
+
+      link_to_if(authorized_url?(options), name, options, html_options, &block)
+    end
   end
 end
