@@ -186,7 +186,7 @@ module LogicalAuthz
           end
           return false unless criteria.has_key?(:user) and criteria.has_key?(:id)
           if block_given?
-            yield(criteria[:user], criteria[:id].to_i)
+            yield(criteria[:user], criteria[:id].to_i) rescue false
           else
             criteria[:user].id == criteria[:id].to_i
           end
