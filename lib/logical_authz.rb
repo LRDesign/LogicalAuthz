@@ -104,7 +104,7 @@ module LogicalAuthz
       begin
         redirect_to :back
       rescue ActionController::RedirectBackError
-        redirect_to home_url
+        redirect_to default_unauthorized_url
       end
     end
 
