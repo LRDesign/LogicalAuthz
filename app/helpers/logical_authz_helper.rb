@@ -59,12 +59,19 @@ module LogicalAuthz
       yield(items) unless authzd.nil?
     end
 
-    #Still experimental
-    def link_to_if_authorized(name, options = nil, html_options = nil, &block)
+    def link_to_if_authorized(name, options = nil, html_options = nil)
       options ||= {}
       html_options ||= {}
-
-      link_to_if(authorized_url?(options), name, options, html_options, &block)
+      url = options
+      if(authorized_url?(url))
+        link_to(name, options, html_options)
+      else
+        if block_given?
+          yield
+        else
+          name
+        end
+      end
     end
 
     def button_to_if_authorized(name, options = {}, html_options = {})
@@ -72,7 +79,11 @@ module LogicalAuthz
       if(authorized_url?(url))
         button_to(name, options, html_options)
       else
-        name
+        if block_given?
+          yield
+        else
+          name
+        end
       end
     end
 
@@ -81,7 +92,11 @@ module LogicalAuthz
       if(authorized_url?(url))
         link_to_remote(name, options, html_options)
       else
-        name
+        if block_given?
+          yield
+        else
+          name
+        end
       end
     end
 
@@ -90,7 +105,11 @@ module LogicalAuthz
       if(authorized_url?(url))
         button_to_remote(name, options, html_options)
       else
-        name
+        if block_given?
+          yield
+        else
+          name
+        end
       end
     end
   end
