@@ -41,7 +41,12 @@ module LogicalAuthz
       else
         path = url_for(options)
         path, querystring = path.split('?')
-        params = ActionController::Routing::Routes.recognize_path(path, :method => method)
+        params = nil
+        begin
+          params = ActionController::Routing::Routes.recognize_path(path, :method => :get)
+        rescue ActionController::RoutingError => ex
+          return true
+        end
         querystring.blank? ? params : params.merge(Rack::Utils.parse_query(querystring).symbolize_keys!)
       end
       authorized?(params)
@@ -60,6 +65,33 @@ module LogicalAuthz
       html_options ||= {}
 
       link_to_if(authorized_url?(options), name, options, html_options, &block)
+    end
+
+    def button_to_if_authorized(name, options = {}, html_options = {})
+      url = options
+      if(authorized_url?(url))
+        button_to(name, options, html_options)
+      else
+        name
+      end
+    end
+
+    def link_to_remote_if_authorized(name, options = {}, html_options = nil)
+      url = options[:url]
+      if(authorized_url?(url))
+        link_to_remote(name, options, html_options)
+      else
+        name
+      end
+    end
+
+    def button_to_remote_if_authorized(name, options = {}, html_options = nil)
+      url = options[:url]
+      if(authorized_url?(url))
+        button_to_remote(name, options, html_options)
+      else
+        name
+      end
     end
   end
 end
