@@ -34,7 +34,8 @@ module LogicalAuthz
       (LogicalAuthz::group_model.all - user.groups).map { |g| [ g.name, g.id ] }
     end    
 
-    def authorized_url?(options)
+    def authorized_url?(options, html_options = nil)
+      html_options ||= {}
       params = {}
       if Hash === options
         params = options
@@ -42,8 +43,9 @@ module LogicalAuthz
         path = url_for(options)
         path, querystring = path.split('?')
         params = nil
+        http_method = html_options[:method] || :get
         begin
-          params = ActionController::Routing::Routes.recognize_path(path, :method => :get)
+          params = ActionController::Routing::Routes.recognize_path(path, :method => http_method)
         rescue ActionController::RoutingError => ex
           return true
         end
@@ -54,7 +56,7 @@ module LogicalAuthz
 
     def authorized_menu(*items)
       authzd = items.find do |item|
-        authorized_url? item
+        authorized_url? [*item].last
       end
       yield(items) unless authzd.nil?
     end
@@ -63,7 +65,7 @@ module LogicalAuthz
       options ||= {}
       html_options ||= {}
       url = options
-      if(authorized_url?(url))
+      if(authorized_url?(url, html_options))
         link_to(name, options, html_options)
       else
         if block_given?
@@ -76,7 +78,7 @@ module LogicalAuthz
 
     def button_to_if_authorized(name, options = {}, html_options = {})
       url = options
-      if(authorized_url?(url))
+      if(authorized_url?(url, html_options))
         button_to(name, options, html_options)
       else
         if block_given?
@@ -89,7 +91,7 @@ module LogicalAuthz
 
     def link_to_remote_if_authorized(name, options = {}, html_options = nil)
       url = options[:url]
-      if(authorized_url?(url))
+      if(authorized_url?(url, html_options))
         link_to_remote(name, options, html_options)
       else
         if block_given?
@@ -102,7 +104,7 @@ module LogicalAuthz
 
     def button_to_remote_if_authorized(name, options = {}, html_options = nil)
       url = options[:url]
-      if(authorized_url?(url))
+      if(authorized_url?(url, html_options))
         button_to_remote(name, options, html_options)
       else
         if block_given?
