@@ -34,6 +34,18 @@ module LogicalAuthz
       (LogicalAuthz::group_model.all - user.groups).map { |g| [ g.name, g.id ] }
     end    
 
+    def groups
+      LogicalAuthz::group_model.all.map do |group|
+        [group.name, group.id ]
+      end
+    end
+
+    def controller_pairs
+      controllers = ActionController::Routing::possible_controllers
+      controllers -= %w{rails/info application authz rails_info}
+      controllers.map{|c| [c.classify, c]}
+    end
+
     def authorized_url?(options, html_options = nil)
       html_options ||= {}
       params = {}

@@ -2,6 +2,33 @@ class PermissionsController < AuthzController
   needs_authorization
   admin_authorized
 
+  before_filter :get_permission, :only => [:edit, :update, :destroy]
+
+  def index
+    @permissions = Permission.all
+  end
+
+  def new
+    @permission = Permission.new
+  end
+
+  def edit
+  end
+
+  def update
+    if @permssion.update_attributes(params[:permission])
+      flash[:notice] = "Permission updated"
+      redirect_to permissions_path
+    else
+      render :action => :edit
+    end
+  end
+
+  def destroy
+    @permission.try(:destroy)
+    redirect_to permissions_path
+  end
+
   def create
     group = Group.find_by_id(params[:group])
     return if group.nil?
@@ -26,5 +53,10 @@ class PermissionsController < AuthzController
         redirect_to :back
       end
     end
+  end
+
+  private
+  def get_permission
+    @permission = Permission.find_by_id(params[:id])
   end
 end
