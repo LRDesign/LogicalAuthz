@@ -129,22 +129,47 @@ module LogicalAuthz
     end
 
     module ClassMethods
+      #It was tempting to build this on before_filter directly - however, 
+      #inspecting a controller to see if a particular filter will run for a 
+      #particular action is fragile.
       def needs_authorization(*actions)
         before_filter CheckAuthorization
         if actions.empty?
-          write_inheritable_attribute(:whole_controller_authorization, true)
+          write_inheritable_attribute(:authorization_policy, true)
         else
-          write_inheritable_array(:requires_action_authorization, actions)
+          action_hash = {}
+          actions.each do |action|
+            action_hash[action.to_sym] = true
+          end
+          write_inheritable_hash(:action_authorization, action_hash)
+        end
+      end
+
+      def publicly_allowed(*actions)
+        if actions.empty?
+          write_inheritable_attribute(:authorization_policy, false)
+        else
+          action_hash = {}
+          actions.each do |action|
+            action_hash[action.to_sym] = false
+          end
+
+          write_inheritable_hash(:publicly_allowed_actions, action_hash)
         end
       end
 
       def authorization_needed?(action)
-        return true if read_inheritable_attribute(:whole_controller_authorization)
+        policies = read_inheritable_attribute(:action_authorization) || {}
+        default_policy = read_inheritable_attribute(:authorization_policy) || false
         if action.nil?
-          return !read_inheritable_attribute(:requires_action_authorization).nil?
+          return default_policy
         end
-        return true if ( read_inheritable_attribute(:requires_action_authorization) || [] ).include?(action.to_sym)
-        return false
+
+        if policies.has_key?(action.to_sym)
+          return policies[action.to_sym]
+        end
+
+        return default_policy
       end
 
       # grant_aliases :new => :create  # =>
