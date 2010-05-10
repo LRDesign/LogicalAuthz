@@ -154,19 +154,20 @@ module LogicalAuthz
             action_hash[action.to_sym] = false
           end
 
-          write_inheritable_hash(:publicly_allowed_actions, action_hash)
+          write_inheritable_hash(:action_authorization, action_hash)
         end
       end
 
       def authorization_needed?(action)
+        action = action.to_sym
         policies = read_inheritable_attribute(:action_authorization) || {}
         default_policy = read_inheritable_attribute(:authorization_policy) || false
         if action.nil?
           return default_policy
         end
 
-        if policies.has_key?(action.to_sym)
-          return policies[action.to_sym]
+        if policies.has_key?(action)
+          return policies[action]
         end
 
         return default_policy
