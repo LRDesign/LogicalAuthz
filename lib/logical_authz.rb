@@ -101,9 +101,17 @@ module LogicalAuthz
 
     def redirect_to_lobby(message = "You aren't authorized for that")
       flash[:error] = message
-      begin
-        redirect_to :back
-      rescue ActionController::RedirectBackError
+
+      back = request.headers["Referer"]
+      Rails.logger.debug("Going: #{back} authz'd?")
+      if back.nil? 
+        Rails.logger.debug{"Back is nil - going to the default_unauthorized_url"}
+        redirect_to default_unauthorized_url
+      elsif LogicalAuthz::is_authorized?(criteria_from_url(back))
+        Rails.logger.debug{"Back authorized - going to #{back}"}
+        redirect_to back
+      else
+        Rails.logger.debug{"Back is unauthorized - going to the default_unauthorized_url"}
         redirect_to default_unauthorized_url
       end
     end

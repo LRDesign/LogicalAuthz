@@ -46,22 +46,27 @@ module LogicalAuthz
       controllers.map{|c| [c.classify, c]}
     end
 
+    def criteria_from_url(url, html_options = nil)
+      uri = URI.parse(url_for(url))
+      path = uri.path
+      querystring = uri.query
+      http_method = (html_options.nil? ? nil : html_options[:method]) || :get
+      begin
+        params = ActionController::Routing::Routes.recognize_path(path, :method => http_method)
+      rescue ActionController::RoutingError => ex
+        Rails.logger.info{"Asked to authorize url: #{options.inspect} - couldn't route: #{ex.class.name}: #{ex.message}"}
+        return nil
+      end
+      querystring.blank? ? params : params.merge(Rack::Utils.parse_query(querystring).symbolize_keys!)
+    end
+
     def authorized_url?(options, html_options = nil)
       html_options ||= {}
       params = {}
       if Hash === options
         params = options
       else
-        path = url_for(options)
-        path, querystring = path.split('?')
-        params = nil
-        http_method = html_options[:method] || :get
-        begin
-          params = ActionController::Routing::Routes.recognize_path(path, :method => http_method)
-        rescue ActionController::RoutingError => ex
-          return true
-        end
-        querystring.blank? ? params : params.merge(Rack::Utils.parse_query(querystring).symbolize_keys!)
+        params = criteria_from_url(options)
       end
       authorized?(params)
     end
