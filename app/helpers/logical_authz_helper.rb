@@ -54,7 +54,7 @@ module LogicalAuthz
       begin
         params = ActionController::Routing::Routes.recognize_path(path, :method => http_method)
       rescue ActionController::RoutingError => ex
-        Rails.logger.info{"Asked to authorize url: #{options.inspect} - couldn't route: #{ex.class.name}: #{ex.message}"}
+        Rails.logger.info{"Asked to authorize url: #{html_options.inspect} - couldn't route: #{ex.class.name}: #{ex.message}"}
         return nil
       end
       querystring.blank? ? params : params.merge(Rack::Utils.parse_query(querystring).symbolize_keys!)
@@ -68,7 +68,11 @@ module LogicalAuthz
       else
         params = criteria_from_url(options)
       end
-      authorized?(params)
+      if params.nil?
+        true #We can't work out where it is, so we have no opinion
+      else
+        authorized?(params)
+      end
     end
 
     def authorized_menu(*items)
