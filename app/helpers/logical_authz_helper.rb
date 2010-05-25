@@ -47,6 +47,7 @@ module LogicalAuthz
     end
 
     def criteria_from_url(url, html_options = nil)
+      return nil if url.nil?
       uri = URI.parse(url_for(url))
       path = uri.path
       querystring = uri.query

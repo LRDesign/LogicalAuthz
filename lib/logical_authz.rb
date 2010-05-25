@@ -104,10 +104,11 @@ module LogicalAuthz
 
       back = request.headers["Referer"]
       Rails.logger.debug("Going: #{back} authz'd?")
-      if back.nil? 
+      back_criteria = criteria_from_url(back)
+      if back_criteria.nil? 
         Rails.logger.debug{"Back is nil - going to the default_unauthorized_url"}
         redirect_to default_unauthorized_url
-      elsif back_criteria = criteria_from_url(back) && LogicalAuthz::is_authorized?(back_criteria)
+      elsif LogicalAuthz::is_authorized?(back_criteria)
         Rails.logger.debug{"Back authorized - going to #{back}"}
         redirect_to back
       else
