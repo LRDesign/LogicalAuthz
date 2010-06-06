@@ -1,5 +1,4 @@
-require File.dirname(__FILE__) + '/../spec_helper'
-require 'app/helpers/logical_authz_helper'
+require 'spec/spec_helper'
 
 class FooController < AuthzController
 end
@@ -13,6 +12,13 @@ end
 describe LogicalAuthz::Helper do
   include LogicalAuthz::MockAuth
 
+  before do
+    @group = Factory(:group)
+    Factory(:permission, :group => @group, :controller => "foo")
+    Factory(:permission, :group => @group, :controller => "bar", :action => "baz")
+    Factory(:permission, :group => @group, :controller => "wire", :action => "vinyl", :subject_id => 1)
+  end
+
   it "should refuse authorization to guests" do
     logout
     helper.should_not be_authorized
@@ -20,7 +26,8 @@ describe LogicalAuthz::Helper do
 
   describe "should recognize authorized users" do
     before do
-      login_as(:authorized)
+      user = Factory(:authz_account, :groups => [@group])
+      login_as(user)
     end
 
     it "on a controller level" do
@@ -56,7 +63,8 @@ describe LogicalAuthz::Helper do
 
   describe "should refuse unauthorized users" do
     before do
-      login_as(:unauthorized)
+      user = Factory(:authz_account, :groups => [@group])
+      login_as(user)
     end
 
     it "on a controller level" do

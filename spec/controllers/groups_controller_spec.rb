@@ -1,4 +1,4 @@
-require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
+require File.expand_path(File.dirname(__FILE__) + '/../support/spec_helper')
 
 describe GroupsController do
   include LogicalAuthz::MockAuth
@@ -9,7 +9,7 @@ describe GroupsController do
 
   describe "logging in as non-admin" do
     before(:each) do
-      @person = Factory.create(:az_account)
+      @person = Factory.create(:authz_account)
       login_as(@person)
     end
 
@@ -23,7 +23,7 @@ describe GroupsController do
 
   describe "logged in as admin" do
     before(:each) do
-      @person = login_as(Factory.create(:az_admin))
+      @person = login_as(Factory.create(:authz_admin))
     end
     
     describe "GET index" do
@@ -38,23 +38,17 @@ describe GroupsController do
     describe "GET show" do
       before(:each) do
         @group = Factory.create(:group, :name => 'foo')
-        @group.members << @user1 = Factory.create(:az_account)
-        @group.members << @user2 = Factory.create(:az_account)        
       end
+
       it "should find and expose the requested group as @group" do
         get :show, :id => @group.id
         assigns[:group].should == @group
       end
-      
-      # it "should find and paginate the group's users" do
-      #   get :show, :id => @group.id
-      #   assigns[:users].should == [ @user1, @user2 ]
-      # end
     end
    
     describe "POST create" do
       describe "with valid params" do        
-        it "creates a new group and assings it as @group" do
+        it "creates a new group and assigns it as @group" do
           lambda do 
             post :create, :group => { :name => "foo group" }
           end.should change(Group, :count).by(1)

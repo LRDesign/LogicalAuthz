@@ -1,12 +1,12 @@
-require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
+require File.expand_path(File.dirname(__FILE__) + '/../support/spec_helper')
 
 describe GroupsUsersController do
   include LogicalAuthz::MockAuth
 
   before(:each) do 
-    @admin = login_as( Factory.create(:az_admin) )
+    @admin = login_as( Factory.create(:authz_admin) )
     request.env['HTTP_REFERER'] = "http://test.host/previous/page"
-    @user = Factory.create(:az_account)
+    @user = Factory.create(:authz_account)
     @user.groups.clear
     @group = Factory.create(:group, :name => "registered")
   end

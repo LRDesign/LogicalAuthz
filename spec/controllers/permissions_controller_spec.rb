@@ -1,10 +1,10 @@
-require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
+require File.expand_path(File.dirname(__FILE__) + '/../support/spec_helper')
 
 describe PermissionsController do
   include LogicalAuthz::MockAuth
   integrate_views
   before(:each) do
-    @person = login_as(Factory.create(:az_admin))    
+    @person = login_as(Factory.create(:authz_admin))
     request.env["HTTP_ACCEPT"] = "application/javascript" 
     @group = Factory.create(:group)
   end

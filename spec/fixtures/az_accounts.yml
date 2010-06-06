@@ -1,6 +1,0 @@
-authorized:
-  name: "Authorized"
-  groups: theincrowd
-
-unauthorized:
-  name: "Unauthorized"
