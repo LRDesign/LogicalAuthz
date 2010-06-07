@@ -6,6 +6,7 @@ class LogicalAuthzRoutesGenerator < LogicalAuthz::Generator
       manifest.named_route :permit_page, '/permit', :controller => 'permissions', :action => 'create', :conditions => { :method => :post } 
       manifest.named_route :forbid_page, '/forbid', :controller => 'permissions', :action => 'destroy', :conditions => { :method => :delete }
       manifest.route_resources :groups
+      manifest.named_route :default_unauthorized, '/', :controller => "home", :action => "index"
     end
   end
 end

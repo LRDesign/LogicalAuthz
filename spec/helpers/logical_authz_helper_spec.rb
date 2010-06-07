@@ -1,4 +1,4 @@
-require 'spec/spec_helper'
+require File::expand_path(File.join(File.dirname(__FILE__), '..', 'support', 'spec_helper'))
 
 class FooController < AuthzController
 end
@@ -21,7 +21,9 @@ describe LogicalAuthz::Helper do
 
   it "should refuse authorization to guests" do
     logout
-    helper.should_not be_authorized
+    helper.authorized?(:controller => "foo",
+                       :action => "nerf",
+                       :id => 7).should == false
   end
 
   describe "should recognize authorized users" do
@@ -63,7 +65,7 @@ describe LogicalAuthz::Helper do
 
   describe "should refuse unauthorized users" do
     before do
-      user = Factory(:authz_account, :groups => [@group])
+      user = Factory(:authz_account)
       login_as(user)
     end
 

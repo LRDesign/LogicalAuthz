@@ -1,4 +1,3 @@
-require 'logical_authz'
 
 class PermissionsController < AuthzController                
   needs_authorization
