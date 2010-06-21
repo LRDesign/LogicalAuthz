@@ -25,7 +25,9 @@ module LogicalAuthz
         criteria[:user] = AuthnFacade.current_user(self)
       end
 
-      LogicalAuthz.is_authorized?(criteria)
+      result = LogicalAuthz.is_authorized?(criteria)
+
+      return result
     end 
         
     # returns an array of group names and ids (suitable for select_tag)
