@@ -27,11 +27,29 @@ module LogicalAuthz
     def unauthorized_group_names
       @unauthorized_group_names ||= []
     end
+
+    def inspect_criteria(criteria)
+      criteria.inject({}) do |hash, name_value|
+        name, value = *name_value
+        case value
+        when ActiveRecord::Base
+          hash[name] = {value.class.name => value.id}
+        when ActionController::Base
+          hash[name] = value.class
+        else
+          hash[name] = value
+        end
+        
+        hash
+      end.inspect
+    end
   end
 
 
   def self.is_authorized?(criteria={})
     criteria ||= {}
+
+    Rails.logger.debug{"LogicalAuthz: asked to authorize #{inspect_criteria(criteria)}"}
 
     controller_class = ::ApplicationController
 
@@ -50,9 +68,26 @@ module LogicalAuthz
       end
     end
 
-    return true unless controller_class.authorization_needed?(criteria[:action])
+    Rails.logger.debug{"LogicalAuthz: determined controller: #{controller_class.name}"}
+
+    if controller_class == Spec::Rails::Example::ViewExampleGroupController
+      raise "Authorization will not work properly with the ViewExampleGroupController used by View specs."
+    end
+
+    if controller_class.nil?
+      raise "Could not determine controller class - criteria[:controller] => #{criteria[:controller]}"
+    end
+
+    unless controller_class.authorization_needed?(criteria[:action])
+      Rails.logger.debug{"LogicalAuthz: controller says no authz needed."}
+      return true 
+    else
+      Rails.logger.debug{"LogicalAuthz: checking authorization"}
+    end
 
     #TODO Fail if controller unspecified?
+    #TODO What about Spec::Rails::Example::ViewExampleGroupController
+
 
     criteria[:group] = criteria[:group].nil? ? [] : [*criteria[:group]]
     if criteria.has_key?(:user) and not criteria[:user].nil?
@@ -64,7 +99,7 @@ module LogicalAuthz
     criteria[:group], not_groups = criteria[:group].partition do |group|
       LogicalAuthz::group_model === group
     end
-    Rails.logger.warn "Found in criteria[:groups]: #{not_groups.inspect}"
+    Rails.logger.warn{ "Found in criteria[:groups]: #{not_groups.inspect}"} unless not_groups.empty?
 
     #TODO Fail if group unspecified and user unspecified?
 
@@ -72,6 +107,8 @@ module LogicalAuthz
     criteria[:action_aliases] = actions.map do |action|
       controller_class.grant_aliases_for(action)
     end.flatten + actions.map{|action| action.to_sym}
+
+    Rails.logger.debug {"LogicalAuthz: final computed authz criteria: #{inspect_criteria(criteria)} - checking authz procs"}
 
     controller_class.authorization_procs.each do |prok|
       approval = prok.call(criteria[:user], criteria) #Tempted to remove the user param
@@ -87,9 +124,13 @@ module LogicalAuthz
       :subject_id => criteria[:id] 
     }
 
-    Rails.logger.debug{ select_on.inspect }
+    Rails.logger.debug{ "LogicalAuthz: checking permissions: #{select_on.inspect}" }
     allowed = LogicalAuthz::permission_model.exists?([PermissionSelect, select_on])
-    Rails.logger.info{ "Denied: #{select_on.inspect}"} unless allowed
+    unless allowed
+      Rails.logger.info{ "Denied: #{select_on.inspect}"} 
+    else
+      Rails.logger.info{ "Allowed: #{select_on.inspect}"} 
+    end
     return allowed
   end
 
