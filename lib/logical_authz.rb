@@ -69,13 +69,6 @@ module LogicalAuthz
       if klass.nil?
         raise "Could not determine controller class - criteria[:controller] => #{criteria[:controller]}"
       end
-
-      begin
-        if klass == Spec::Rails::Example::ViewExampleGroupController
-          raise "Authorization will not work properly with the ViewExampleGroupController used by View specs."
-        end
-      rescue NameError => ex
-      end
     end
 
 
@@ -267,6 +260,40 @@ module LogicalAuthz
         return false
       end
 
+      def new_check_acls(criteria)
+        policy = nil
+        access_controls.each do |control|
+          policy = control.evaluate(criteria)
+          break unless policy.nil?
+        end
+        return policy
+      end
+
+      module AccessControl
+        class Policy
+          def initialize(name, &check)
+            @name = name
+            @check = check
+          end
+
+          def evaluate(criteria)
+            if @check.call(criteria)
+              return decision
+            else
+              return nil
+            end
+          end
+        end
+
+        class Allow < Policy
+          
+
+        end
+
+        class Deny < Policy
+        end
+      end
+
       def check_permitted(criteria)
         select_on = {
           :group_ids => criteria[:group].map {|grp| grp.id},
@@ -284,7 +311,6 @@ module LogicalAuthz
         end
         return allowed
       end
-
 
       def dynamic_authorization(&block)
         write_inheritable_array(:dynamic_authorization_procs, [proc &block])
