@@ -259,7 +259,7 @@ module LogicalAuthz
 
       def check_acls(criteria)
         authorization_procs.each do |prok|
-          approval = prok.call(criteria[:user], criteria) #Tempted to remove the user param
+          approval = prok.call(criteria)
           next if approval == false
           next if approval.blank?
           return true
@@ -296,7 +296,7 @@ module LogicalAuthz
 
       def owner_authorized(*actions)
         actions.map!{|action| action.to_sym}
-        dynamic_authorization do |user, criteria|
+        dynamic_authorization do |criteria|
           unless actions.nil? or actions.empty?
             return false if (actions & criteria[:action_aliases]).empty?
           end
@@ -311,7 +311,7 @@ module LogicalAuthz
 
       def admin_authorized(*actions)
         actions.map!{|action| action.to_sym}
-        dynamic_authorization do |user, criteria|
+        dynamic_authorization do |criteria|
           unless actions.nil? or actions.empty?
             return false if (actions & criteria[:action_aliases]).empty?
           end
