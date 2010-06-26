@@ -71,6 +71,24 @@ module LogicalAuthz
       end
     end
 
+    def check_permitted(criteria)
+      select_on = {
+        :group_ids => criteria[:group].map {|grp| grp.id},
+        :controller => criteria[:controller],
+        :action_names => criteria[:action_aliases].map {|a| a.to_s},
+        :subject_id => criteria[:id] 
+      }
+
+      Rails.logger.debug{ "LogicalAuthz: checking permissions: #{select_on.inspect}" }
+      allowed = LogicalAuthz::permission_model.exists?([PermissionSelect, select_on])
+      unless allowed
+        Rails.logger.info{ "Denied: #{select_on.inspect}"} 
+      else
+        Rails.logger.info{ "Allowed: #{select_on.inspect}"} 
+      end
+      return allowed
+    end
+
 
     def is_authorized?(criteria={})
       criteria ||= {}
@@ -96,7 +114,7 @@ module LogicalAuthz
 
       return true if controller_class.check_acls(criteria)
 
-      return controller_class.check_permitted(criteria)
+      return check_permitted(criteria)
     end
   end
 
@@ -247,6 +265,7 @@ module LogicalAuthz
 
         Rails.logger.debug {"LogicalAuthz: final computed authz criteria: #{inspect_criteria(criteria)} - checking authz procs"}
 
+        criteria[:controller] = controller_path
         return criteria
       end
 
@@ -262,54 +281,157 @@ module LogicalAuthz
 
       def new_check_acls(criteria)
         policy = nil
-        access_controls.each do |control|
+        read_inheritable_attribute(:access_controllers).each do |control|
           policy = control.evaluate(criteria)
           break unless policy.nil?
         end
         return policy
       end
 
+      def build_policy(type, name, actions, &block)
+        control = nil
+        if block.nil? and AccessControl::Policy === name
+          control = name
+          control.type = type
+          control.actions = actions.dup
+        elsif block.nil?
+          raise "Access controls need rules!"
+        else
+          control = AccessControl::Policy.new(name, type, &block)
+        end
+
+        write_inheritable_array(:access_controllers, [control])
+      end
+
+      class AccessList
+        def initialize(controller)
+          @controller = controller
+        end
+
+        def allow(name, actions = nil, &block)
+          build_policy(AccessControl::Allow, name, actions, &block)
+        end
+
+        def deny(name, actions = nil, &block)
+          build_policy(AccessControl::Deny, name, actions, &block)
+        end
+
+        def administrator(name = nil)
+          AccessControl::Administrators.new(name)
+        end
+
+        def owner(name = nil, &block)
+          AccessControl::Owners.new(name, &block)
+        end
+      end
+
+      def policy(default = nil, &block)
+        case default
+        when :allow, "allow"
+          needs_authorization
+        when :deny, "deny"
+          publicly_allowed
+        end
+
+        list = AccessList.new(self)
+        list.instance_eval(&block)
+      end
+
       module AccessControl
         class Policy
-          def initialize(name, &check)
+          def initialize(name, type, actions, &check)
             @name = name
+            @decision_type = type
             @check = check
+            self.actions=(actions)
+          end
+          attr_accessor :name, :decision_type
+
+          def actions=(actions)
+            @actions = actions.map {|action| action.to_s}
+          end
+
+          def decision(reasons)
+            @decision_type.new(name, reasons)
+          end
+
+          def apply_rule(criteria)
+            @check.call(criteria)
           end
 
           def evaluate(criteria)
-            if @check.call(criteria)
-              return decision
+            unless @actions.nil? or @actions.empty?
+              return nil if (actions & criteria[:action_aliases]).empty?
+            end
+
+            if apply_rule(criteria) == true
+              return decision(criteria)
             else
               return nil
             end
           end
         end
 
-        class Allow < Policy
-          
+        class PermissionExists < Policy
+          def initialize(name = nil)
+            @name = name || "permission"
+          end
 
+          def apply_rule(criteria)
+            return LogicalAuthz::check_permitted(criteria)
+          end
         end
 
-        class Deny < Policy
-        end
-      end
+        class Administators < Policy
+          def initialize(name = nil)
+            @name = name || "administrator"
+          end
 
-      def check_permitted(criteria)
-        select_on = {
-          :group_ids => criteria[:group].map {|grp| grp.id},
-          :controller => controller_path,
-          :action_names => criteria[:action_aliases].map {|a| a.to_s},
-          :subject_id => criteria[:id] 
-        }
-
-        Rails.logger.debug{ "LogicalAuthz: checking permissions: #{select_on.inspect}" }
-        allowed = LogicalAuthz::permission_model.exists?([PermissionSelect, select_on])
-        unless allowed
-          Rails.logger.info{ "Denied: #{select_on.inspect}"} 
-        else
-          Rails.logger.info{ "Allowed: #{select_on.inspect}"} 
+          def apply_rule(criteria)
+            return criteria[:group].include?(Group.admin_group)
+          end
         end
-        return allowed
+
+        class Owners < Policy
+          def initialize(name = nil, &block)
+            @name = name || "owner"
+            @block = block
+          end
+
+          def apply_rule(criteria)
+            return false unless criteria.has_key?(:user) and criteria.has_key?(:id)
+            unless @block.nil?
+              @block.call(criteria[:user], criteria[:id].to_i) rescue false
+            else
+              criteria[:user].id == criteria[:id].to_i
+            end
+          end
+        end
+
+        class PolicyDecision
+          def initialize(policy_name, reasons)
+            @policy_name = policy_name
+            @reasons = reasons
+          end
+
+          attr_reader :policy_name, :reasons
+
+          def forbidden?
+            !permitted?
+          end
+        end
+
+        class Allow < PolicyDecision
+          def permitted?
+            true
+          end
+        end
+
+        class Deny < PolicyDecision
+          def permitted?
+            false
+          end
+        end
       end
 
       def dynamic_authorization(&block)
