@@ -82,10 +82,9 @@ module LogicalAuthz
     end
 
     def authorized_menu(*items)
-      authzd = items.find do |item|
+      yield(items) if items.all? do |item|
         authorized_url? [*item].last
       end
-      yield(items) unless authzd.nil?
     end
 
     def link_to_if_authorized(name, options = nil, html_options = nil)
