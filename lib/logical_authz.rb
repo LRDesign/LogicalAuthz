@@ -245,16 +245,18 @@ module LogicalAuthz
           grant_aliases_for(action)
         end.flatten + actions.map{|action| action.to_sym}
 
-        Rails.logger.debug {"LogicalAuthz: final computed authz criteria: #{inspect_criteria(criteria)} - checking authz procs"}
+        Rails.logger.debug {"LogicalAuthz: final computed authz criteria: #{inspect_criteria(criteria)}"}
 
         return criteria
       end
 
       def check_acls(criteria)
+        Rails.logger.debug {"LogicalAuthz: checking authz procs"}
         authorization_procs.each do |prok|
           approval = prok.call(criteria)
           next if approval == false
           next if approval.blank?
+          Rails.logger.debug {"LogicalAuthz: authorized by #{prok.inspect}"}
           return true
         end
         return false
