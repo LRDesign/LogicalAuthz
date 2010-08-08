@@ -10,7 +10,8 @@ module LogicalAuthz
       end
 
       def check_authorization_flag
-        return true if @flash[:group_authorization] == true
+        return false unless @flash.has_key? :logical_authz_record
+        return true if @flash[:logical_authz_record][:result] == true
         return false
       end
 
@@ -21,12 +22,24 @@ module LogicalAuthz
         return check_authorization_flag
       end
 
+      def failure_message(match_text)
+        if @flash.has_key? :logical_authz_record
+          laz_rec = @flash[:logical_authz_record]
+          "Expected #{@controller.class.name}(#{@controller.params.inspect})" + 
+            " #{match_text} #{match_state}, but flash[:logical_authz_record][:result] " + 
+              "is <#{laz_rec[:result].inspect}> (reason: #{laz_rec[:reason].inspect}, " +
+            "rule: #{laz_rec[:determining_rule].name})"
+        else
+          "Expected #{@controller.class.name}(#{@controller.params.inspect}) #{match_text} #{match_state}, but flash did not have key :logical_authz_record"
+        end
+      end
+
       def failure_message_for_should
-        "Expected #{@controller.class.name}(#{@controller.params.inspect}) to be #{match_state}, but flash[:group_authorization] is <#{@flash[:group_authorization].inspect}>"
+        failure_message("to be")
       end
 
       def failure_message_for_should_not
-        "Expected #{@controller.class.name}(#{@controller.params.inspect}) not to be #{match_state}, but flash[:group_authorization] is <#{@flash[:group_authorization].inspect}>"
+        failure_message("not to be")
       end
     end
 

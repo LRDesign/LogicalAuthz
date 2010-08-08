@@ -9,6 +9,10 @@ end
 class WireController < AuthzController
 end
 
+#Needs testing: grants and permissions.
+#Specifically: policy on update, grant_alias edit => update - authz works for 
+#update & edit
+
 describe LogicalAuthz::Helper do
   include LogicalAuthz::MockAuth
 

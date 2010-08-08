@@ -178,8 +178,8 @@ module LogicalAuthz
       def needs_authorization(*actions)
         policy(*actions) do
           allow :permitted
+          deny :always
         end
-        authorization_by_default(false) if actions.empty?
       end
 
       def publicly_allowed(*actions)
@@ -201,7 +201,8 @@ module LogicalAuthz
         if actions.empty?
           set_policy(builder.list(get_policy(nil)), nil)
         else
-          unalias_actions(actions).each do |action|
+          actions = unalias_actions(actions)
+          actions.each do |action|
             set_policy(builder.list(get_policy(action)), action)
           end
         end
@@ -245,7 +246,12 @@ module LogicalAuthz
       end
 
       def default_authorization
-        read_inheritable_attribute(:authorization_policy)
+        policy = read_inheritable_attribute(:authorization_policy)
+        if policy.nil?
+          true
+        else
+          policy
+        end
       end
 
       def authorization_needed?(action)
@@ -264,10 +270,10 @@ module LogicalAuthz
         if policies.has_key?(from.to_sym)
           if policies.has_key?(to.to_sym)
             #Should be raise, at some future point
-            warn "Moving policies defined on #{from} would clobber policies on #{to}"
+            warn "Moving policies defined on #{self.name} for #{from} would clobber policies on #{to}"
           end
           policies[to.to_sym] = policies[from.to_sym]
-          policies[from.to_sym] = nil
+          policies.delete(from.to_sym)
         end
       end
 
@@ -280,7 +286,7 @@ module LogicalAuthz
           [*allows].each do |allowed|
             aliases[allowed.to_sym] << grant.to_sym
             aliased[grant.to_sym] = allowed.to_sym
-            move_policies(allowed, grant)
+            move_policies(grant, allowed)
           end
         end
         write_inheritable_attribute(:grant_alias_hash, aliases)
@@ -450,7 +456,7 @@ module LogicalAuthz
             @name = default_name
           end
 
-          attr_writer :name
+          attr_accessor :name
 
           def default_name
             "Unknown Rule"
