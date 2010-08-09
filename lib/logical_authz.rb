@@ -160,13 +160,11 @@ module LogicalAuthz
         :id => params[:id]
       }
 
-      flash[:logical_authz_record] = {}
+      flash[:logical_authz_record] = {:authz_path => request.path.dup}
       if LogicalAuthz.is_authorized?(criteria, flash[:logical_authz_record])
-        flash[:group_authorization] = true
         return true
       else
         redirect_to_lobby("Your account is not authorized to perform this action.")
-        flash[:group_authorization] = false
         return false
       end
     end

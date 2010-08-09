@@ -49,7 +49,8 @@ module LogicalAuthz
       end
 
       def check_authorization_flag
-        return true if @flash[:group_authorization] == false
+        return false unless @flash.has_key? :logical_authz_record
+        return true if @flash[:logical_authz_record][:result] == false
         return false
       end
     end
