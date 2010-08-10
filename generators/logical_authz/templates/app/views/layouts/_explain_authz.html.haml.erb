@@ -1,0 +1,21 @@
+- unless flash.has_key? :logical_authz_record
+  -# Authorization not required
+- else
+  - if flash[:logical_authz_record][:result]
+    -# Authorization successful
+  - else
+    - laz_rec = flash[:logical_authz_record]
+    - if LogicalAuthz::AuthnFacade::current_user(controller).nil?
+      You aren't
+      = link_to("logged in", login_path)
+    - else
+      - case laz_rec[:reason]
+      - when :default, :rule_triggered
+        You aren't permitted to access 
+        = laz_rec[:authz_path]
+      - when :no_authorization_needed
+        You were denied access to 
+        = laz_rec[:authz_path]
+        although authorization isn't required - something is probably wrong.
+      - else
+        You were denied authorization
