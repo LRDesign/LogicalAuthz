@@ -10,6 +10,7 @@ module LogicalAuthz
         instance_eval(&block)
       end
 
+      #TODO DSL needs to allow config of rules
       def add_rule(rule, allows = true, name = nil)
         case rule
         when Policy
@@ -107,6 +108,48 @@ module LogicalAuthz
 
       def check(criteria)
         true
+      end
+    end
+
+    class SubPolicy < Policy
+      def initialize(decision, &block)
+        super(decision)
+        builder = Builder.new
+        builder.define(&block)
+        @criteria_list = builder.list
+      end
+
+      def check(criteria)
+        @criteria_list.each do |control|
+          policy = control.evaluate(criteria)
+          next if policy.nil?
+          return match_policy(policy)
+        end
+        return false
+      end
+    end
+
+    class IfAllows < SubPolicy
+      register :if_allows
+
+      def default_name
+        "If allowed by..."
+      end
+
+      def match_policy(policy)
+        policy == true
+      end
+    end
+
+    class IfDenies < SubPolicy
+      register :if_denies
+
+      def default_name
+        "If denied by..."
+      end
+
+      def match_policy(policy)
+        policy == false
       end
     end
 

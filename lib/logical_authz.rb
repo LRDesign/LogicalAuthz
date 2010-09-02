@@ -136,7 +136,7 @@ module LogicalAuthz
 
     def redirect_to_lobby(message = nil)
       back = request.headers["Referer"]
-      Rails.logger.debug("Going: #{back} authz'd?")
+      Rails.logger.debug("Sending user back to: #{back} Authz'd?")
       back_criteria = criteria_from_url(back)
       if back_criteria.nil? 
         Rails.logger.debug{"Back is nil - going to the default_unauthorized_url"}
@@ -150,6 +150,15 @@ module LogicalAuthz
       end
     end
 
+    def strip_record(record)
+      {
+        :rule => record[:determining_rule].name,
+        :logged_in => !record[:user].nil?,
+        :reason => record[:reason],
+        :result => record[:result]
+      }
+    end
+
     def check_authorized
       current_user = AuthnFacade.current_user(self)
 
@@ -160,10 +169,13 @@ module LogicalAuthz
         :id => params[:id]
       }
 
-      flash[:logical_authz_record] = {:authz_path => request.path.dup}
-      if LogicalAuthz.is_authorized?(criteria, flash[:logical_authz_record])
+      logical_authz_record = {:authz_path => request.path.dup}
+      LogicalAuthz.is_authorized?(criteria, logical_authz_record)
+      flash[:logical_authz_record] = strip_record(logical_authz_record)
+      if logical_authz_record[:result]
         return true
       else
+        request.session[:unauthzd_path] = request.path
         redirect_to_lobby("Your account is not authorized to perform this action.")
         return false
       end
