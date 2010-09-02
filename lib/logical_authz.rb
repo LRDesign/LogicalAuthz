@@ -1,4 +1,5 @@
 require 'logical_authz_helper'
+require 'logical_authz/access_control'
 
 module LogicalAuthz
   PermissionSelect = "controller = :controller AND " +
@@ -18,6 +19,7 @@ module LogicalAuthz
       end
       return groups
     end
+
     def clear_unauthorized_groups
       @unauthorized_groups = nil
     end
@@ -74,7 +76,7 @@ module LogicalAuthz
     def check_permitted(criteria)
       select_on = {
         :group_ids => criteria[:group].map {|grp| grp.id},
-        :controller => criteria[:controller],
+        :controller => criteria[:controller_path],
         :action_names => criteria[:action_aliases].map {|a| a.to_s},
         :subject_id => criteria[:id] 
       }
@@ -90,8 +92,10 @@ module LogicalAuthz
     end
 
 
-    def is_authorized?(criteria={})
+    def is_authorized?(criteria=nil, authz_record=nil)
       criteria ||= {}
+      authz_record ||= {}
+      authz_record.merge! :criteria => criteria, :result => nil, :reason => nil
 
       Rails.logger.debug{"LogicalAuthz: asked to authorize #{inspect_criteria(criteria)}"}
 
@@ -103,18 +107,24 @@ module LogicalAuthz
 
       unless controller_class.authorization_needed?(criteria[:action])
         Rails.logger.debug{"LogicalAuthz: controller says no authz needed."}
-        return true 
+        authz_record.merge! :reason => :no_authorization_needed, :result => true
       else
         Rails.logger.debug{"LogicalAuthz: checking authorization"}
+
+        controller_class.normalize_criteria(criteria)
+
+        #TODO Fail if group unspecified and user unspecified?
+
+        unless (acl_result = controller_class.check_acls(criteria, authz_record)).nil?
+          authz_record[:result] = acl_result
+        else
+          authz_record.merge! :reason => :default, :result => controller_class.default_authorization
+        end
       end
 
-      controller_class.normalize_criteria(criteria)
+      Rails.logger.debug{authz_record.inspect}
 
-      #TODO Fail if group unspecified and user unspecified?
-
-      return true if controller_class.check_acls(criteria)
-
-      return check_permitted(criteria)
+      return authz_record[:result]
     end
   end
 
@@ -124,9 +134,7 @@ module LogicalAuthz
     end
     include Helper
 
-    def redirect_to_lobby(message = "You aren't authorized for that")
-      flash[:error] = message
-
+    def redirect_to_lobby(message = nil)
       back = request.headers["Referer"]
       Rails.logger.debug("Going: #{back} authz'd?")
       back_criteria = criteria_from_url(back)
@@ -152,12 +160,11 @@ module LogicalAuthz
         :id => params[:id]
       }
 
-      if LogicalAuthz.is_authorized?(criteria)
-        flash[:group_authorization] = true
+      flash[:logical_authz_record] = {:authz_path => request.path.dup}
+      if LogicalAuthz.is_authorized?(criteria, flash[:logical_authz_record])
         return true
       else
         redirect_to_lobby("Your account is not authorized to perform this action.")
-        flash[:group_authorization] = false
         return false
       end
     end
@@ -167,58 +174,130 @@ module LogicalAuthz
       #inspecting a controller to see if a particular filter will run for a 
       #particular action is fragile.
       def needs_authorization(*actions)
-        before_filter CheckAuthorization
-        if actions.empty?
-          write_inheritable_attribute(:authorization_policy, true)
-        else
-          action_hash = {}
-          actions.each do |action|
-            action_hash[action.to_sym] = true
-          end
-          write_inheritable_hash(:action_authorization, action_hash)
+        policy(*actions) do
+          allow :permitted
+          deny :always
         end
       end
 
       def publicly_allowed(*actions)
         if actions.empty?
-          write_inheritable_attribute(:authorization_policy, false)
+          authorization_by_default(true)
+          reset_policy
         else
-          action_hash = {}
-          actions.each do |action|
-            action_hash[action.to_sym] = false
+          reset_policy(*actions)
+          policy(*actions) do |pol|
+            allow :always
           end
+        end
+      end
 
-          write_inheritable_hash(:action_authorization, action_hash)
+      def policy(*actions, &block)
+        before_filter CheckAuthorization
+        builder = AccessControl::Builder.new
+        builder.define(&block)
+        if actions.empty?
+          set_policy(builder.list(get_policy(nil)), nil)
+        else
+          actions = unalias_actions(actions)
+          actions.each do |action|
+            set_policy(builder.list(get_policy(action)), action)
+          end
+        end
+      end
+
+      def reset_policy(*actions)
+        if actions.empty?
+          set_policy([], nil)
+        else
+          unalias_actions(actions).each do |action|
+            set_policy([], action)
+          end
+        end
+      end
+
+      def clear_policies!
+        write_inheritable_attribute(:controller_access_control, [])
+        write_inheritable_attribute(:action_access_control, {})
+      end
+
+      def get_policy(action)
+        if action.nil?
+          read_inheritable_attribute(:controller_access_control) || []
+        else
+          (read_inheritable_attribute(:action_access_control) || {})[action.to_sym]
+        end
+      end
+
+      def set_policy(acl, action)
+        if action.nil?
+          write_inheritable_attribute(:controller_access_control, acl)
+        else
+          write_inheritable_hash(:action_access_control, {})
+          policies = read_inheritable_attribute(:action_access_control)
+          policies[action.to_sym] = acl
+        end
+      end
+
+      def authorization_by_default(default_allow)
+        write_inheritable_attribute(:authorization_policy, default_allow)
+      end
+
+      def default_authorization
+        policy = read_inheritable_attribute(:authorization_policy)
+        if policy.nil?
+          true
+        else
+          policy
         end
       end
 
       def authorization_needed?(action)
-        action = action.to_sym
-        policies = read_inheritable_attribute(:action_authorization) || {}
-        default_policy = read_inheritable_attribute(:authorization_policy) || false
-        if action.nil?
-          return default_policy
+        acl = access_controls(action)
+        return true unless acl.empty?
+        return !read_inheritable_attribute(:authorization_policy) || false
+      end
+
+      def move_policies(from, to)
+        policies = read_inheritable_attribute(:action_access_control)
+        if policies.nil?
+          policies = {}
+          write_inheritable_attribute(:action_access_control, policies)
         end
 
-        if policies.has_key?(action)
-          return policies[action]
+        if policies.has_key?(from.to_sym)
+          if policies.has_key?(to.to_sym)
+            #Should be raise, at some future point
+            warn "Moving policies defined on #{self.name} for #{from} would clobber policies on #{to}"
+          end
+          policies[to.to_sym] = policies[from.to_sym]
+          policies.delete(from.to_sym)
         end
-
-        return default_policy
       end
 
       # grant_aliases :new => :create  # =>
       # anyone with :new permission can do :create
       def grant_aliases(hash)
         aliases = read_inheritable_attribute(:grant_alias_hash) || Hash.new{|h,k| h[k] = []}
+        aliased = read_inheritable_attribute(:aliased_grants) || {}
         hash.each_pair do |grant, allows|
           [*allows].each do |allowed|
             aliases[allowed.to_sym] << grant.to_sym
+            aliased[grant.to_sym] = allowed.to_sym
+            move_policies(grant, allowed)
           end
         end
         write_inheritable_attribute(:grant_alias_hash, aliases)
+        write_inheritable_attribute(:aliased_grants, aliased)
       end
       
+      def unalias_actions(actions)
+        aliased_actions = read_inheritable_attribute(:aliased_grants) || {}
+        actions.map do |action|
+          aliased_actions[action.to_sym] || action
+        end.compact.uniq
+      end
+
       def grant_aliases_for(action)
         grant_aliases = read_inheritable_attribute(:grant_alias_hash)
         action = action.to_sym
@@ -263,207 +342,59 @@ module LogicalAuthz
           grant_aliases_for(action)
         end.flatten + actions.map{|action| action.to_sym}
 
-        Rails.logger.debug {"LogicalAuthz: final computed authz criteria: #{inspect_criteria(criteria)} - checking authz procs"}
+        criteria[:controller] = self
+        criteria[:controller_path] = controller_path
 
-        criteria[:controller] = controller_path
+        Rails.logger.debug {"LogicalAuthz: final computed authz criteria: #{inspect_criteria(criteria)}"}
+
         return criteria
       end
 
-      def check_acls(criteria)
-        authorization_procs.each do |prok|
-          approval = prok.call(criteria)
-          next if approval == false
-          next if approval.blank?
-          return true
-        end
-        return false
+      def access_controls(action)
+        action = unalias_actions([action]).first
+        action_acl = (read_inheritable_attribute(:action_access_control) || {})[action.to_sym] || []
+        controller_acl = read_inheritable_attribute(:controller_access_control) || []
+        action_acl + controller_acl
       end
 
-      def new_check_acls(criteria)
+      def check_acls(criteria, result_hash = nil)
+        result_hash ||= {}
         policy = nil
-        read_inheritable_attribute(:access_controllers).each do |control|
+
+        acl = access_controls(criteria[:action])
+        result_hash.merge! :checked_rules => [], :determining_rule => nil, :all_rules => acl
+        acl.each do |control|
+          result_hash[:checked_rules] << control
           policy = control.evaluate(criteria)
-          break unless policy.nil?
+          unless policy.nil?
+            result_hash.merge! :determining_rule => control, :reason => :rule_triggered, :result => policy
+            break 
+          end
         end
         return policy
       end
 
-      def build_policy(type, name, actions, &block)
-        control = nil
-        if block.nil? and AccessControl::Policy === name
-          control = name
-          control.type = type
-          control.actions = actions.dup
-        elsif block.nil?
-          raise "Access controls need rules!"
-        else
-          control = AccessControl::Policy.new(name, type, &block)
-        end
-
-        write_inheritable_array(:access_controllers, [control])
-      end
-
-      class AccessList
-        def initialize(controller)
-          @controller = controller
-        end
-
-        def allow(name, actions = nil, &block)
-          build_policy(AccessControl::Allow, name, actions, &block)
-        end
-
-        def deny(name, actions = nil, &block)
-          build_policy(AccessControl::Deny, name, actions, &block)
-        end
-
-        def administrator(name = nil)
-          AccessControl::Administrators.new(name)
-        end
-
-        def owner(name = nil, &block)
-          AccessControl::Owners.new(name, &block)
-        end
-      end
-
-      def policy(default = nil, &block)
-        case default
-        when :allow, "allow"
-          needs_authorization
-        when :deny, "deny"
-          publicly_allowed
-        end
-
-        list = AccessList.new(self)
-        list.instance_eval(&block)
-      end
-
-      module AccessControl
-        class Policy
-          def initialize(name, type, actions, &check)
-            @name = name
-            @decision_type = type
-            @check = check
-            self.actions=(actions)
-          end
-          attr_accessor :name, :decision_type
-
-          def actions=(actions)
-            @actions = actions.map {|action| action.to_s}
-          end
-
-          def decision(reasons)
-            @decision_type.new(name, reasons)
-          end
-
-          def apply_rule(criteria)
-            @check.call(criteria)
-          end
-
-          def evaluate(criteria)
-            unless @actions.nil? or @actions.empty?
-              return nil if (actions & criteria[:action_aliases]).empty?
-            end
-
-            if apply_rule(criteria) == true
-              return decision(criteria)
-            else
-              return nil
-            end
-          end
-        end
-
-        class PermissionExists < Policy
-          def initialize(name = nil)
-            @name = name || "permission"
-          end
-
-          def apply_rule(criteria)
-            return LogicalAuthz::check_permitted(criteria)
-          end
-        end
-
-        class Administators < Policy
-          def initialize(name = nil)
-            @name = name || "administrator"
-          end
-
-          def apply_rule(criteria)
-            return criteria[:group].include?(Group.admin_group)
-          end
-        end
-
-        class Owners < Policy
-          def initialize(name = nil, &block)
-            @name = name || "owner"
-            @block = block
-          end
-
-          def apply_rule(criteria)
-            return false unless criteria.has_key?(:user) and criteria.has_key?(:id)
-            unless @block.nil?
-              @block.call(criteria[:user], criteria[:id].to_i) rescue false
-            else
-              criteria[:user].id == criteria[:id].to_i
-            end
-          end
-        end
-
-        class PolicyDecision
-          def initialize(policy_name, reasons)
-            @policy_name = policy_name
-            @reasons = reasons
-          end
-
-          attr_reader :policy_name, :reasons
-
-          def forbidden?
-            !permitted?
-          end
-        end
-
-        class Allow < PolicyDecision
-          def permitted?
-            true
-          end
-        end
-
-        class Deny < PolicyDecision
-          def permitted?
-            false
-          end
-        end
-      end
-
+      #This method exists for backwards compatibility.  It's likely more 
+      #readable to use the policy DSL
       def dynamic_authorization(&block)
-        write_inheritable_array(:dynamic_authorization_procs, [proc &block])
-      end
-
-      def authorization_procs
-        read_inheritable_attribute(:dynamic_authorization_procs) || []
-      end
-
-      def owner_authorized(*actions)
-        actions.map!{|action| action.to_sym}
-        dynamic_authorization do |criteria|
-          unless actions.nil? or actions.empty?
-            return false if (actions & criteria[:action_aliases]).empty?
-          end
-          return false unless criteria.has_key?(:user) and criteria.has_key?(:id)
-          if block_given?
-            yield(criteria[:user], criteria[:id].to_i) rescue false
-          else
-            criteria[:user].id == criteria[:id].to_i
-          end
+        policy do |pol|
+          allow(&block)
         end
       end
 
+      #This method exists for backwards compatibility.  It's likely more 
+      #readable to use the policy DSL
+      def owner_authorized(*actions, &block)
+        policy(*actions) do |pol|
+          allow AccessControl::Owner.new(true, &block)
+        end
+      end
+
+      #This method exists for backwards compatibility.  It's likely more 
+      #readable to use the policy DSL
       def admin_authorized(*actions)
-        actions.map!{|action| action.to_sym}
-        dynamic_authorization do |criteria|
-          unless actions.nil? or actions.empty?
-            return false if (actions & criteria[:action_aliases]).empty?
-          end
-          return criteria[:group].include?(Group.admin_group)
+        policy(*actions) do |pol|
+          allow :if_admin
         end
       end
     end
