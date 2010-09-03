@@ -10,7 +10,7 @@ module LogicalAuthz
         instance_eval(&block)
       end
 
-      def resolve_rule(rule, allows)
+      def resolve_rule(rule)
         case rule
         when Policy #This is the important case, actually
         when Symbol, String

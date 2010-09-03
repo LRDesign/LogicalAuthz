@@ -398,7 +398,7 @@ module LogicalAuthz
       #readable to use the policy DSL
       def owner_authorized(*actions, &block)
         policy(*actions) do |pol|
-          allow AccessControl::Owner.new(true, &block)
+          allow AccessControl::Owner.new(&block)
         end
       end
 
