@@ -10,25 +10,31 @@ module LogicalAuthz
         instance_eval(&block)
       end
 
-      #TODO DSL needs to allow config of rules
-      def add_rule(rule, allows = true, name = nil)
+      def resolve_rule(rule, allows)
         case rule
-        when Policy
+        when Policy #This is the important case, actually
         when Symbol, String
           klass = Policy.names[rule.to_sym]
           raise "Policy name #{rule} not found in #{Policy.names.keys.inspect}" if klass.nil?
-          rule = klass.new(allows)
+          rule = klass.new
         when Class
-          rule = rule.new(allows)
+          rule = rule.new
           unless rule.responds_to?(:check)
             raise "Policy classes must respond to #check"
           end
         when Proc
-          rule = ProcPolicy.new(allows, &rule)
+          rule = ProcPolicy.new(&rule)
         else
           raise "Authorization Rules have to be Policy objects, a Policy class or a proc"
         end
+        rule
+      end
 
+      #TODO DSL needs to allow config of rules
+      def add_rule(rule, allows = true, name = nil)
+        rule = resolve_rule(rule)
+
+        rule.decision = allows
         rule.name = name unless name.nil?
         @list << rule
       end
@@ -53,6 +59,19 @@ module LogicalAuthz
         add_rule(rule, false, name)
       end
 
+      def if_allowed(&block)
+        IfAllows.new(&block)
+      end
+
+      def if_denied(&block)
+        IfDenies.new(&block)
+      end
+
+      def except(policy) #This needs a different name
+        policy = resolve_rule(policy)
+        Reversed.new(policy)
+      end
+
       def existing_policy
         @list = @after
       end
@@ -64,12 +83,12 @@ module LogicalAuthz
     end
 
     class Policy
-      def initialize(allows)
-        @decision = allows
+      def initialize
+        @decision = false
         @name = default_name
       end
 
-      attr_accessor :name
+      attr_accessor :name, :decision
 
       def default_name
         "Unknown Rule"
@@ -111,9 +130,20 @@ module LogicalAuthz
       end
     end
 
+    class Reversed < Policy
+      def initialize(other)
+        @other = other
+        super()
+      end
+
+      def check(criteria)
+        !@other.check(criteria)
+      end
+    end
+
     class SubPolicy < Policy
-      def initialize(decision, &block)
-        super(decision)
+      def initialize(&block)
+        super()
         builder = Builder.new
         builder.define(&block)
         @criteria_list = builder.list
@@ -130,8 +160,6 @@ module LogicalAuthz
     end
 
     class IfAllows < SubPolicy
-      register :if_allows
-
       def default_name
         "If allowed by..."
       end
@@ -142,8 +170,6 @@ module LogicalAuthz
     end
 
     class IfDenies < SubPolicy
-      register :if_denies
-
       def default_name
         "If denied by..."
       end
@@ -168,9 +194,9 @@ module LogicalAuthz
     class Owner < Policy
       register :if_owner
 
-      def initialize(allows, &map_owner)
+      def initialize(&map_owner)
         @mapper = map_owner
-        super(allows)
+        super()
       end
 
       def default_name
@@ -189,9 +215,9 @@ module LogicalAuthz
 
     class Permitted < Policy
       register :permitted
-      def initialize(allows, specific_criteria = {})
+      def initialize(specific_criteria = {})
         @criteria = specific_criteria
-        super(allows)
+        super()
       end
 
       def default_name
@@ -205,9 +231,9 @@ module LogicalAuthz
     end
 
     class ProcPolicy < Policy
-      def initialize(allows, &check)
+      def initialize(&check)
         @check = check
-        super(allows)
+        super()
       end
 
       def check(criteria)
