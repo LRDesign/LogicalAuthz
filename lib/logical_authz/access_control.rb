@@ -81,7 +81,7 @@ module LogicalAuthz
 
       def evaluate(criteria)
         if check(criteria) == true
-          Rails::logger.debug{"Rule: #@name triggered - authorization allowed: #@decision"}
+          Rails::logger.debug{"Rule: #@name triggered - authorization allowed: #@decision"} if LAZ_DEBUG
           return @decision
         else
           return nil
