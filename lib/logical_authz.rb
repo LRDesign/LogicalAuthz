@@ -81,12 +81,12 @@ module LogicalAuthz
         :subject_id => criteria[:id] 
       }
 
-      Rails.logger.debug{ "LogicalAuthz: checking permissions: #{select_on.inspect}" }
+      Rails.logger.debug{ "LogicalAuthz: checking permissions: #{select_on.inspect}" } if LAZ_DEBUG
       allowed = LogicalAuthz::permission_model.exists?([PermissionSelect, select_on])
       unless allowed
-        Rails.logger.info{ "Denied: #{select_on.inspect}"} 
+        Rails.logger.debug{ "Denied: #{select_on.inspect}"} if LAZ_DEBUG
       else
-        Rails.logger.info{ "Allowed: #{select_on.inspect}"} 
+        Rails.logger.debug{ "Allowed: #{select_on.inspect}"} if LAZ_DEBUG
       end
       return allowed
     end
@@ -97,19 +97,19 @@ module LogicalAuthz
       authz_record ||= {}
       authz_record.merge! :criteria => criteria, :result => nil, :reason => nil
 
-      Rails.logger.debug{"LogicalAuthz: asked to authorize #{inspect_criteria(criteria)}"}
+      Rails.logger.debug{"LogicalAuthz: asked to authorize #{inspect_criteria(criteria)}"} if LAZ_DEBUG
 
       controller_class = find_controller(criteria[:controller])
       
-      Rails.logger.debug{"LogicalAuthz: determined controller: #{controller_class.name}"}
+      Rails.logger.debug{"LogicalAuthz: determined controller: #{controller_class.name}"} if LAZ_DEBUG
 
       check_controller(controller_class)
 
       unless controller_class.authorization_needed?(criteria[:action])
-        Rails.logger.debug{"LogicalAuthz: controller says no authz needed."}
+        Rails.logger.debug{"LogicalAuthz: controller says no authz needed."} if LAZ_DEBUG
         authz_record.merge! :reason => :no_authorization_needed, :result => true
       else
-        Rails.logger.debug{"LogicalAuthz: checking authorization"}
+        Rails.logger.debug{"LogicalAuthz: checking authorization"} if LAZ_DEBUG
 
         controller_class.normalize_criteria(criteria)
 
@@ -122,7 +122,7 @@ module LogicalAuthz
         end
       end
 
-      Rails.logger.debug{authz_record.inspect}
+      Rails.logger.debug{authz_record.inspect} if LAZ_DEBUG
 
       return authz_record[:result]
     end
@@ -136,16 +136,16 @@ module LogicalAuthz
 
     def redirect_to_lobby(message = nil)
       back = request.headers["Referer"]
-      Rails.logger.debug("Sending user back to: #{back} Authz'd?")
+      Rails.logger.debug("Sending user back to: #{back} Authz'd?") if LAZ_DEBUG
       back_criteria = criteria_from_url(back)
       if back_criteria.nil? 
-        Rails.logger.debug{"Back is nil - going to the default_unauthorized_url"}
+        Rails.logger.debug{"Back is nil - going to the default_unauthorized_url"} if LAZ_DEBUG
         redirect_to default_unauthorized_url
       elsif LogicalAuthz::is_authorized?(back_criteria)
-        Rails.logger.debug{"Back authorized - going to #{back}"}
+        Rails.logger.debug{"Back authorized - going to #{back}"} if LAZ_DEBUG
         redirect_to back
       else
-        Rails.logger.debug{"Back is unauthorized - going to the default_unauthorized_url"}
+        Rails.logger.debug{"Back is unauthorized - going to the default_unauthorized_url"} if LAZ_DEBUG
         redirect_to default_unauthorized_url
       end
     end
@@ -171,6 +171,7 @@ module LogicalAuthz
 
       logical_authz_record = {:authz_path => request.path.dup}
       LogicalAuthz.is_authorized?(criteria, logical_authz_record)
+      Rails.logger.debug{"Logical Authz result: #{logical_authz_record.inspect}"} if LAZ_DEBUG
       flash[:logical_authz_record] = strip_record(logical_authz_record)
       if logical_authz_record[:result]
         return true
@@ -416,6 +417,7 @@ module LogicalAuthz
         if controller.class.authorization_needed?(controller.action_name)
           return controller.check_authorized
         else
+          Rails.logger.debug{"Logical Authorization: #{controller} doesn't need authz"}
           return true
         end
       end
