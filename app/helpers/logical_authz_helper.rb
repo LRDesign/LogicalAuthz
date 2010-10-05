@@ -21,7 +21,7 @@ module LogicalAuthz
     def authorized?(criteria=nil)
       criteria ||= {}
 
-      Rails.logger.debug{"Helper authorizing: #{LogicalAuthz.inspect_criteria(criteria)}"} if LAZ_DEBUG
+      Rails.logger.debug{"Helper authorizing: #{LogicalAuthz.inspect_criteria(criteria)}"} if defined?(LAZ_DEBUG) and LAZ_DEBUG
 
       criteria = {:controller => controller.class.controller_name, :action => action_name, :id => params[:id]}.merge(criteria)
       unless criteria.has_key?(:group) or criteria.has_key?(:user)

@@ -99,8 +99,9 @@ module LogicalAuthz
       end
 
       def evaluate(criteria)
+        Rails::logger.debug{"Rule being examined: #{self.inspect}"} if defined?(LAZ_DEBUG) and LAZ_DEBUG
         if check(criteria) == true
-          Rails::logger.debug{"Rule: #@name triggered - authorization allowed: #@decision"} if LAZ_DEBUG
+          Rails::logger.debug{"Rule: #@name triggered - authorization allowed: #@decision"} if defined?(LAZ_DEBUG) and LAZ_DEBUG
           return @decision
         else
           return nil
@@ -114,6 +115,7 @@ module LogicalAuthz
 
         def register(name)
           Policy.names[name.to_sym] = self
+          Policy.names["if_#{name}".to_sym] = self
         end
       end
     end
@@ -180,7 +182,7 @@ module LogicalAuthz
     end
 
     class Administrator < Policy
-      register :if_admin
+      register :admin
 
       def default_name
         "Admins"
@@ -191,8 +193,21 @@ module LogicalAuthz
       end
     end
 
+    class Authenticated < Policy
+      register :authenticated
+
+      def default_name
+        "Authenicated"
+      end
+
+      def check(criteria)
+        criteria[:user] != nil
+      end
+    end
+
+
     class Owner < Policy
-      register :if_owner
+      register :owner
 
       def initialize(&map_owner)
         @mapper = map_owner
