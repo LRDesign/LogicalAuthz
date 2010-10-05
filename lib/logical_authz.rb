@@ -183,16 +183,6 @@ module LogicalAuthz
     end
 
     module ClassMethods
-      #It was tempting to build this on before_filter directly - however, 
-      #inspecting a controller to see if a particular filter will run for a 
-      #particular action is fragile.
-      def needs_authorization(*actions)
-        policy(*actions) do
-          allow :permitted
-          deny :always
-        end
-      end
-
       def publicly_allowed(*actions)
         if actions.empty?
           authorization_by_default(true)
@@ -385,6 +375,17 @@ module LogicalAuthz
           end
         end
         return policy
+      end
+
+      #It was tempting to build this on before_filter directly - however, 
+      #inspecting a controller to see if a particular filter will run for a 
+      #particular action is fragile.
+      def needs_authorization(*actions)
+        policy(*actions) do
+          existing_policy
+          allow :permitted
+          deny :always
+        end
       end
 
       #This method exists for backwards compatibility.  It's likely more 
