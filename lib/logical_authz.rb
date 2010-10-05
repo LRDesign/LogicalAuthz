@@ -391,6 +391,7 @@ module LogicalAuthz
       #readable to use the policy DSL
       def dynamic_authorization(&block)
         policy do |pol|
+          existing_policy
           allow(&block)
         end
       end
@@ -399,7 +400,20 @@ module LogicalAuthz
       #readable to use the policy DSL
       def owner_authorized(*actions, &block)
         policy(*actions) do |pol|
+          existing_policy
           allow AccessControl::Owner.new(&block)
+        end
+      end
+
+      def guests_authorized(*actions)
+        policy(*actions) do |pol|
+          existing_policy
+          if_allowed do
+            deny do |criteria|
+              criteria[:user] != nil
+            end
+            allow :permitted, {:group => LogicalAuthorization.unauthorized_group_names}
+          end
         end
       end
 
@@ -408,6 +422,7 @@ module LogicalAuthz
       def admin_authorized(*actions)
         policy(*actions) do |pol|
           allow :if_admin
+          existing_policy
         end
       end
     end
