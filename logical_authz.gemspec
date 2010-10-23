@@ -21,7 +21,7 @@ SPEC = Gem::Specification.new do |spec|
   spec.files		+= Dir.glob("doc/**/*")
   spec.files		+= Dir.glob("spec/**/*")
 
-  spec.test_file        = "spec_help/gem_test_suite.rb"
+  spec.test_file        = "spec/gem_test_suite.rb"
   
   spec.require_path	= "lib" 
 
