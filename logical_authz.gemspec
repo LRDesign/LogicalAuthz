@@ -42,3 +42,4 @@ RUBYFORGE = {
   :project_page => "http://rubyforge.org/project/#{SPEC.rubyforge_project}/"
 }
 
+SPEC
