@@ -21,7 +21,10 @@ describe LogicalAuthz::Helper do
 
   it "should refuse authorization to guests" do
     logout
-    helper.should_not be_authorized
+
+    helper.authorized?(:controller => "foo").should == false
+    helper.authorized?(:controller => "bar", :action => "baz").should == false
+    helper.authorized?(:controller => "wire", :action => "vinyl", :id => 1).should == false
   end
 
   describe "should recognize authorized users" do
