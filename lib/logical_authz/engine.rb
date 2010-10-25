@@ -8,6 +8,7 @@ module LogicalAuthz
       require 'logical_authz/generators/models/generator'
       require 'logical_authz/generators/routes/generator'
       require 'logical_authz/generators/specs/generator'
+      require 'logical_authz/generators/controllers/generator'
     end
   end
 end
