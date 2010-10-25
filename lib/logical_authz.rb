@@ -1,4 +1,4 @@
-require 'logical_authz_helper'
+#require 'logical_authz_helper'
 require 'logical_authz/access_control'
 
 module LogicalAuthz
