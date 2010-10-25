@@ -9,9 +9,7 @@ module LogicalAuthz
     end
 
     def insert_authz_application
-      inject_into_class "app/controllers/application_controller.rb", ApplicationController do
-        "  include LogicalAuthz::Application\n"
-      end
+      inject_into_class "app/controllers/application_controller.rb", "ApplicationController", "  include LogicalAuthz::Application\n"
     end
   end
 end

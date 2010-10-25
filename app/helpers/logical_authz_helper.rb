@@ -23,7 +23,7 @@ module LogicalAuthz
 
       Rails.logger.debug{"Helper authorizing: #{LogicalAuthz.inspect_criteria(criteria)}"} if defined?(LAZ_DEBUG) and LAZ_DEBUG
 
-      criteria = {:controller => controller.class.controller_name, :action => action_name, :id => params[:id]}.merge(criteria)
+      criteria = {:controller => controller_path, :action => action_name, :id => params[:id]}.merge(criteria)
       unless criteria.has_key?(:group) or criteria.has_key?(:user)
         criteria[:user] = AuthnFacade.current_user(self)
       end
@@ -58,7 +58,7 @@ module LogicalAuthz
       querystring = uri.query
       http_method = (html_options.nil? ? nil : html_options[:method]) || :get
       begin
-        params = ActionController::Routing::Routes.recognize_path(path, :method => http_method)
+        params = Rails.application.routes.recognize_path(path, :method => http_method)
       rescue ActionController::RoutingError => ex
         Rails.logger.info{"Asked to authorize url: #{html_options.inspect} - couldn't route: #{ex.class.name}: #{ex.message}"}
         return nil

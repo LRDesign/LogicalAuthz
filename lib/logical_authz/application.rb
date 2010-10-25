@@ -169,7 +169,7 @@ module LogicalAuthz
       
       def unalias_actions(actions)
         aliased_actions = read_inheritable_attribute(:aliased_grants) || {}
-        actions.map do |action|
+        actions.compact.map do |action|
           aliased_actions[action.to_sym] || action
         end.compact.uniq
       end
@@ -228,7 +228,7 @@ module LogicalAuthz
 
       def access_controls(action)
         action = unalias_actions([action]).first
-        action_acl = (read_inheritable_attribute(:action_access_control) || {})[action.to_sym] || []
+        action_acl = (read_inheritable_attribute(:action_access_control) || {})[action.to_sym] || [] rescue []
         controller_acl = read_inheritable_attribute(:controller_access_control) || []
         action_acl + controller_acl
       end
@@ -241,7 +241,7 @@ module LogicalAuthz
         result_hash.merge! :checked_rules => [], :determining_rule => nil, :all_rules => acl
         acl.each do |control|
           result_hash[:checked_rules] << control
-          Rails.logger.debug{"Chekcing rule: #{control.inspect}"} if defined?(LAZ_DEBUG) and LAZ_DEBUG
+          Rails.logger.debug{"Checking rule: #{control.inspect}"} if defined?(LAZ_DEBUG) and LAZ_DEBUG
           policy = control.evaluate(criteria)
           unless policy.nil?
             Rails.logger.debug{"Rule triggered - result: #{policy.inspect}"} if defined?(LAZ_DEBUG) and LAZ_DEBUG

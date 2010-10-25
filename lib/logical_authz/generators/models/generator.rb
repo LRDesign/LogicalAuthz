@@ -75,8 +75,19 @@ module LogicalAuthz
     end
 
     def create_migration
-      migration_template "migrations/create_groups.rb", "db/migrate/create_#{group_field}.rb"
-      migration_template "migrations/create_users_groups.rb", "db/migrate/create_#{user_table}_#{group_table}.rb"
+      dest_file = "db/migrate/create_#{group_field}.rb"
+      begin
+        migration_template "migrations/create_groups.rb", dest_file
+      rescue Rails::Generators::Error
+        say_status :exist, dest_file, :blue
+      end
+
+      dest_file = "db/migrate/create_#{user_table}_#{group_table}.rb"
+      begin
+        migration_template "migrations/create_users_groups.rb", dest_file
+      rescue Rails::Generators::Error
+        say_status :exist, dest_file, :blue
+      end
     end
   end
 
@@ -86,7 +97,10 @@ module LogicalAuthz
     end
 
     def create_migration
-      migration_template "migrations/create_permissions.rb", "db/migrate/create_#{permission_field}.rb"
+      dest_file = "db/migrate/create_#{permission_field}.rb"
+      migration_template "migrations/create_permissions.rb", dest_file
+    rescue Rails::Generators::Error
+      say_status :exist, dest_file, :blue 
     end
   end
 

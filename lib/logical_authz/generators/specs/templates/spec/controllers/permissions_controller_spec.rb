@@ -18,7 +18,7 @@ describe PermissionsController do
         "p_controller" => "blah",
         "object"=> 123
       }
-      response.should have_rjs
+      response.headers["Content-Type"].should =~ %r{/javascript}
     end
   end
 end

@@ -56,7 +56,7 @@ module LogicalAuthz
           klass = reference
         end
       when LogicalAuthz::Application
-        klass = reference.klass
+        klass = reference.class
       when String, Symbol
         klass_name = reference.to_s.camelize + "Controller"
         begin 
@@ -68,9 +68,9 @@ module LogicalAuthz
       return klass
     end
 
-    def check_controller(klass)
+    def check_controller(klass, from_criteria)
       if klass.nil?
-        raise "Could not determine controller class - criteria[:controller] => #{criteria[:controller]}"
+        raise "Could not determine controller class - criteria[:controller] => #{from_criteria}"
       end
     end
 
@@ -104,7 +104,7 @@ module LogicalAuthz
       
       Rails.logger.debug{"LogicalAuthz: determined controller: #{controller_class.name}"} if defined?(LAZ_DEBUG) and LAZ_DEBUG
 
-      check_controller(controller_class)
+      check_controller(controller_class, criteria[:controller])
 
       unless controller_class.authorization_needed?(criteria[:action])
         Rails.logger.debug{"LogicalAuthz: controller says no authz needed."} if defined?(LAZ_DEBUG) and LAZ_DEBUG

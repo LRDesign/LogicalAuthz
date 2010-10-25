@@ -1,6 +1,7 @@
 class <%=group_class%> < ActiveRecord::Base
   validates_presence_of :name
   validates_uniqueness_of :name
+  attr_accessible :name
   
   has_many :<%=permission_table%>
 
@@ -17,6 +18,7 @@ class <%=group_class%> < ActiveRecord::Base
     }                   
     return LogicalAuthz::is_authorized?(conditions)
   end
+
   
   class << self
     def admin_group

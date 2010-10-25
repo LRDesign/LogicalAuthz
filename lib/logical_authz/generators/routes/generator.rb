@@ -6,8 +6,8 @@ module LogicalAuthz
     end
 
     def add_permissions
-      route "post '/permit' => 'permission#create'"
-      route "delete '/permit' => 'permission#destroy'"
+      route "post '/permit' => 'permissions#create'"
+      route "delete '/permit' => 'permissions#destroy'"
     end
 
     def add_groups
