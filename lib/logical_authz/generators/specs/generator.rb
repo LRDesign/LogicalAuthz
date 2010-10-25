@@ -28,13 +28,13 @@ module LogicalAuthz
     def create_factories
       empty_directory "spec/factories"
 
-      template "spec/factories/az_accounts.rb.erb", "spec/factories/logical_authz_#{template_data[:user_table]}.rb"
-      template "spec/factories/az_groups.rb.erb", "spec/factories/logical_authz_#{template_data[:group_table]}.rb"
-      template "spec/factories/permissions.rb.erb", "spec/factories/logical_authz_#{template_data[:permission_table]}.rb"
+      template "spec/factories/az_accounts.rb", "spec/factories/logical_authz_#{template_data[:user_table]}.rb"
+      template "spec/factories/az_groups.rb", "spec/factories/logical_authz_#{template_data[:group_table]}.rb"
+      template "spec/factories/permissions.rb", "spec/factories/logical_authz_#{template_data[:permission_table]}.rb"
     end
 
     def create_helper_spec
-      template "spec/helpers/logical_authz_helper_spec.rb.erb", "spec/helpers/logical_authz_helper_spec.rb"
+      template "spec/helpers/logical_authz_helper_spec.rb", "spec/helpers/logical_authz_helper_spec.rb"
     end
 
 =begin
@@ -46,11 +46,11 @@ module LogicalAuthz
         manifest.directory "spec/helpers"
 
         manifest.with_options :assigns => template_data do |templ|
-          templ.template "spec/support/logical_authz.rb.erb", "spec/support/logical_authz.rb"
-          templ.template "spec/support/mock_auth.rb.erb", "spec/support/mock_auth.rb"
-          templ.template "spec/controllers/permissions_controller_spec.rb.erb", "spec/controllers/permissions_controller_spec.rb"
-          templ.template "spec/controllers/groups_controller_spec.rb.erb", "spec/controllers/groups_controller_spec.rb"
-          templ.template "spec/controllers/groups_users_controller_spec.rb.erb", "spec/controllers/groups_users_controller_spec.rb"
+          templ.template "spec/support/logical_authz.rb", "spec/support/logical_authz.rb"
+          templ.template "spec/support/mock_auth.rb", "spec/support/mock_auth.rb"
+          templ.template "spec/controllers/permissions_controller_spec.rb", "spec/controllers/permissions_controller_spec.rb"
+          templ.template "spec/controllers/groups_controller_spec.rb", "spec/controllers/groups_controller_spec.rb"
+          templ.template "spec/controllers/groups_users_controller_spec.rb", "spec/controllers/groups_users_controller_spec.rb"
         end
       end
     end
