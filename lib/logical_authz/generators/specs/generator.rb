@@ -34,7 +34,17 @@ module LogicalAuthz
     end
 
     def create_helper_spec
+      empty_directory "spec/helpers"
+
       template "spec/helpers/logical_authz_helper_spec.rb", "spec/helpers/logical_authz_helper_spec.rb"
+    end
+
+    def create_controller_specs
+      empty_directory "spec/controllers"
+
+      template "spec/controllers/permissions_controller_spec.rb", "spec/controllers/permissions_controller_spec.rb"
+      template "spec/controllers/groups_controller_spec.rb", "spec/controllers/groups_controller_spec.rb"
+      template "spec/controllers/groups_users_controller_spec.rb", "spec/controllers/groups_users_controller_spec.rb"
     end
 
     def create_support
@@ -43,22 +53,5 @@ module LogicalAuthz
       template "spec/support/logical_authz.rb"
       template "spec/support/mock_auth.rb"
     end
-
-=begin
-    def manifest
-      record do |manifest|
-        manifest.directory "spec/factories"
-        manifest.directory "spec/support"
-        manifest.directory "spec/controllers"
-        manifest.directory "spec/helpers"
-
-        manifest.with_options :assigns => template_data do |templ|
-          templ.template "spec/controllers/permissions_controller_spec.rb", "spec/controllers/permissions_controller_spec.rb"
-          templ.template "spec/controllers/groups_controller_spec.rb", "spec/controllers/groups_controller_spec.rb"
-          templ.template "spec/controllers/groups_users_controller_spec.rb", "spec/controllers/groups_users_controller_spec.rb"
-        end
-      end
-    end
-=end
   end
 end

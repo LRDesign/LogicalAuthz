@@ -70,6 +70,10 @@ module LogicalAuthz
       template "app/models/group.rb", "app/models/#{group_field}.rb"
     end
 
+    def inject_habtm_groups
+      inject_into_class "app/models/#{user_field}.rb", user_class, "  has_and_belongs_to_many :#{group_table}\n"
+    end
+
     def create_migration
       migration_template "migrations/create_groups.rb", "db/migrate/create_#{group_field}.rb"
       migration_template "migrations/create_users_groups.rb", "db/migrate/create_#{user_table}_#{group_table}.rb"

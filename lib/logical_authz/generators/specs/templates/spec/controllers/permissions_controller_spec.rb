@@ -2,7 +2,7 @@ require 'spec/spec_helper'
 
 describe PermissionsController do
   include LogicalAuthz::MockAuth
-  integrate_views
+
   before(:each) do
     @person = login_as(Factory.create(:authz_admin))
     request.env["HTTP_ACCEPT"] = "application/javascript" 
