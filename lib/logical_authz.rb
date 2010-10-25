@@ -1,5 +1,6 @@
 #require 'logical_authz_helper'
 require 'logical_authz/access_control'
+require 'logical_authz/application'
 
 module LogicalAuthz
   PermissionSelect = "controller = :controller AND " +

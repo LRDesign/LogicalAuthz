@@ -1,4 +1,3 @@
-require 'logical_authz'
 require 'rails'
 
 module LogicalAuthz
@@ -10,5 +9,7 @@ module LogicalAuthz
       require 'logical_authz/generators/specs/generator'
       require 'logical_authz/generators/controllers/generator'
     end
+
+    config.eager_load_paths.unshift 'app/helpers'
   end
 end

@@ -1,3 +1,5 @@
+require 'logical_authz_helper'
+
 module LogicalAuthz
   module Application
     def self.included(klass)

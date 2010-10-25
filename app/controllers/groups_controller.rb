@@ -1,3 +1,5 @@
+require 'logical_authz'
+
 class GroupsController < AuthzController
   
   PER_PAGE = 20

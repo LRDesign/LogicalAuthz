@@ -15,7 +15,7 @@ module LogicalAuthz
     end
 
     def controllers
-      invoke("logical_authz:controllers")
+      invoke("logical_authz:controller")
     end
 
   end
