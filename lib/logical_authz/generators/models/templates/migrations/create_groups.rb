@@ -1,4 +1,4 @@
-class CreateGroups < ActiveRecord::Migration
+class Create<%=group_class%> < ActiveRecord::Migration
   def self.up  
     create_table :<%= group_table%> do |t|  
       t.string :name  
