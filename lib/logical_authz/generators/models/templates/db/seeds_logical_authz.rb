@@ -2,9 +2,7 @@
 #require 'db/logical_authz_seeds.rb'
 #to your db/seeds
 
-admin_group = <%=group_class%>.create!(
-  :name => <%=admin_group.inspect%>
-)
+admin_group = <%=group_class%>.find_or_create_by_name(<%=admin_group.inspect%>).save!
 
 module LogicalAuthz
   module PermissionSeeds
