@@ -68,7 +68,7 @@ module LogicalAuthz
   end
 end
 
-module Spec::Rails::Example
+module RSpec::Rails::Example
   class ControllerExampleGroup
     include LogicalAuthz::ControllerExampleGroupMixin
   end
