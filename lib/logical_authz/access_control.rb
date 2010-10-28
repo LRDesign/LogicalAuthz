@@ -78,7 +78,7 @@ module LogicalAuthz
 
       def list(existing = nil)
         existing ||= []
-        @before + existing + @after
+        result = @before + existing + @after
       end
     end
 

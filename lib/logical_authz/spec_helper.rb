@@ -28,7 +28,7 @@ module LogicalAuthz
           "Expected #{@controller.class.name}(#{@controller.params.inspect})" + 
             " #{match_text} #{match_state}, but flash[:logical_authz_record][:result] " + 
               "is <#{laz_rec[:result].inspect}> (reason: #{laz_rec[:reason].inspect}, " +
-            "rule: #{laz_rec[:determining_rule].name})"
+            "rule: #{laz_rec[:determining_rule].try(:name)})"
         else
           "Expected #{@controller.class.name}(#{@controller.params.inspect}) #{match_text} #{match_state}, but flash did not have key :logical_authz_record"
         end
