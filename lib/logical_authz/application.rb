@@ -9,16 +9,16 @@ module LogicalAuthz
 
     def redirect_to_lobby(message = nil)
       back = request.headers["Referer"]
-      Rails.logger.debug("Sending user back to: #{back} Authz'd?") if defined?(LAZ_DEBUG) and LAZ_DEBUG
+      laz_debug{"Sending user back to: #{back} Authz'd?"}
       back_criteria = criteria_from_url(back)
       if back_criteria.nil? 
-        Rails.logger.debug{"Back is nil - going to the default_unauthorized_url"} if defined?(LAZ_DEBUG) and LAZ_DEBUG
+        laz_debug{"Back is nil - going to the default_unauthorized_url"}
         redirect_to default_unauthorized_url
       elsif LogicalAuthz::is_authorized?(back_criteria)
-        Rails.logger.debug{"Back authorized - going to #{back}"} if defined?(LAZ_DEBUG) and LAZ_DEBUG
+        laz_debug{"Back authorized - going to #{back}"}
         redirect_to back
       else
-        Rails.logger.debug{"Back is unauthorized - going to the default_unauthorized_url"} if defined?(LAZ_DEBUG) and LAZ_DEBUG
+        laz_debug{"Back is unauthorized - going to the default_unauthorized_url"}
         redirect_to default_unauthorized_url
       end
     end
@@ -44,7 +44,7 @@ module LogicalAuthz
 
       logical_authz_record = {:authz_path => request.path.dup}
       LogicalAuthz.is_authorized?(criteria, logical_authz_record)
-      Rails.logger.debug{"Logical Authz result: #{logical_authz_record.inspect}"} if defined?(LAZ_DEBUG) and LAZ_DEBUG
+      laz_debug{"Logical Authz result: #{logical_authz_record.inspect}"}
       flash[:logical_authz_record] = strip_record(logical_authz_record)
       if logical_authz_record[:result]
         return true
@@ -56,6 +56,10 @@ module LogicalAuthz
     end
 
     module ClassMethods
+      def laz_debug
+        LogicalAuthz::laz_debug{yield} if block_given?
+      end
+
       def publicly_allowed(*actions)
         if actions.empty?
           authorization_by_default(true)
@@ -107,8 +111,10 @@ module LogicalAuthz
 
       def set_policy(acl, action)
         if action.nil?
+          laz_debug{ "Policy set: #{self.name} - all: #{acl.inspect}" }
           write_inheritable_attribute(:controller_access_control, acl)
         else
+          laz_debug{ "Policy set: #{self.name}##{action}: #{acl.inspect}" }
           write_inheritable_hash(:action_access_control, {})
           policies = read_inheritable_attribute(:action_access_control)
           policies[action.to_sym] = acl
@@ -221,15 +227,17 @@ module LogicalAuthz
         criteria[:controller] = self
         criteria[:controller_path] = controller_path
 
-        Rails.logger.debug {"LogicalAuthz: final computed authz criteria: #{inspect_criteria(criteria)}"} if defined?(LAZ_DEBUG) and LAZ_DEBUG
+        laz_debug{"LogicalAuthz: final computed authz criteria: #{inspect_criteria(criteria)}"}
 
         return criteria
       end
 
       def access_controls(action)
-        action = unalias_actions([action]).first
-        action_acl = (read_inheritable_attribute(:action_access_control) || {})[action.to_sym] || [] rescue []
         controller_acl = read_inheritable_attribute(:controller_access_control) || []
+        return controller_acl if action.nil?
+        action = unalias_actions([action]).first
+        action_acl = (read_inheritable_attribute(:action_access_control) || {})[action.to_sym] || []
+        laz_debug{ [action, (read_inheritable_attribute(:action_access_control) || {}).keys, action_acl, controller_acl] }
         action_acl + controller_acl
       end
 
@@ -241,10 +249,10 @@ module LogicalAuthz
         result_hash.merge! :checked_rules => [], :determining_rule => nil, :all_rules => acl
         acl.each do |control|
           result_hash[:checked_rules] << control
-          Rails.logger.debug{"Checking rule: #{control.inspect}"} if defined?(LAZ_DEBUG) and LAZ_DEBUG
+          laz_debug{"Checking rule: #{control.inspect}"}
           policy = control.evaluate(criteria)
           unless policy.nil?
-            Rails.logger.debug{"Rule triggered - result: #{policy.inspect}"} if defined?(LAZ_DEBUG) and LAZ_DEBUG
+            laz_debug{"Rule triggered - result: #{policy.inspect}"}
             result_hash.merge! :determining_rule => control, :reason => :rule_triggered, :result => policy
             break 
           end
@@ -262,6 +270,10 @@ module LogicalAuthz
             allow AccessControl::Permitted.new({:group => LogicalAuthz.unauthorized_groups})
           }
           allow :permitted
+          existing_policy
+        end
+
+        policy do
           existing_policy
           deny :always
         end

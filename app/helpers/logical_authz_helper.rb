@@ -15,13 +15,40 @@ module LogicalAuthz
     def group_model
       @group_model || ::Group rescue nil
     end
+
+    def debug!
+      @debug = true
+    end
+
+    def no_debug
+      @debug = false
+    end
+
+    def debugging?
+      defined? @debug and @debug
+    end
+
+    def laz_debug
+      if block_given? and LogicalAuthz::debugging?
+        Rails::logger::debug do 
+          msg = yield
+          String === msg ? msg : msg.inspect
+        end
+      end
+    end
   end
 
   module Helper
+    def laz_debug
+      if block_given?
+        LogicalAuthz::laz_debug{yield}
+      end
+    end
+
     def authorized?(criteria=nil)
       criteria ||= {}
 
-      Rails.logger.debug{"Helper authorizing: #{LogicalAuthz.inspect_criteria(criteria)}"} if defined?(LAZ_DEBUG) and LAZ_DEBUG
+      laz_debug{"Helper authorizing: #{LogicalAuthz.inspect_criteria(criteria)}"}
 
       criteria = {:controller => controller_path, :action => action_name, :id => params[:id]}.merge(criteria)
       unless criteria.has_key?(:group) or criteria.has_key?(:user)

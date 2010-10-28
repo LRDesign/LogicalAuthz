@@ -82,12 +82,12 @@ module LogicalAuthz
         :subject_id => criteria[:id] 
       }
 
-      Rails.logger.debug{ "LogicalAuthz: checking permissions: #{select_on.inspect}" } if defined?(LAZ_DEBUG) && LAZ_DEBUG
+      laz_debug{ "LogicalAuthz: checking permissions: #{select_on.inspect}" }
       allowed = LogicalAuthz::permission_model.exists?([PermissionSelect, select_on])
       unless allowed
-        Rails.logger.debug{ "Denied: #{select_on.inspect}"} if defined?(LAZ_DEBUG) and LAZ_DEBUG
+        laz_debug{ "Denied: #{select_on.inspect}"}
       else
-        Rails.logger.debug{ "Allowed: #{select_on.inspect}"} if defined?(LAZ_DEBUG) and LAZ_DEBUG
+        laz_debug{ "Allowed: #{select_on.inspect}"}
       end
       return allowed
     end
@@ -98,19 +98,19 @@ module LogicalAuthz
       authz_record ||= {}
       authz_record.merge! :criteria => criteria, :result => nil, :reason => nil
 
-      Rails.logger.debug{"LogicalAuthz: asked to authorize #{inspect_criteria(criteria)}"} if defined?(LAZ_DEBUG) and LAZ_DEBUG
+      laz_debug{"LogicalAuthz: asked to authorize #{inspect_criteria(criteria)}"}
 
       controller_class = find_controller(criteria[:controller])
       
-      Rails.logger.debug{"LogicalAuthz: determined controller: #{controller_class.name}"} if defined?(LAZ_DEBUG) and LAZ_DEBUG
+      laz_debug{"LogicalAuthz: determined controller: #{controller_class.name}"}
 
       check_controller(controller_class, criteria[:controller])
 
       unless controller_class.authorization_needed?(criteria[:action])
-        Rails.logger.debug{"LogicalAuthz: controller says no authz needed."} if defined?(LAZ_DEBUG) and LAZ_DEBUG
+        laz_debug{"LogicalAuthz: controller says no authz needed."}
         authz_record.merge! :reason => :no_authorization_needed, :result => true
       else
-        Rails.logger.debug{"LogicalAuthz: checking authorization"} if defined?(LAZ_DEBUG) and LAZ_DEBUG
+        laz_debug{"LogicalAuthz: checking authorization"}
 
         controller_class.normalize_criteria(criteria)
 
@@ -123,7 +123,7 @@ module LogicalAuthz
         end
       end
 
-      Rails.logger.debug{authz_record.inspect} if defined?(LAZ_DEBUG) and LAZ_DEBUG
+      laz_debug{authz_record}
 
       return authz_record[:result]
     end
