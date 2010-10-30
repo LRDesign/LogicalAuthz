@@ -1,5 +1,6 @@
 require 'logical_authz'
 
+#TODO: R3 respond_with
 class GroupsController < AuthzController
   
   PER_PAGE = 20

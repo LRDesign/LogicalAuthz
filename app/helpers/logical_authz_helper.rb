@@ -52,7 +52,13 @@ module LogicalAuthz
 
       criteria = {:controller => controller_path, :action => action_name, :id => params[:id]}.merge(criteria)
       unless criteria.has_key?(:group) or criteria.has_key?(:user)
-        criteria[:user] = AuthnFacade.current_user(self)
+        controller = case self
+                     when ActionView::Base
+                       self.controller
+                     else
+                       self #XXX ???
+                     end
+        criteria[:user] = AuthnFacade.current_user(controller)
       end
 
       result = LogicalAuthz.is_authorized?(criteria)
