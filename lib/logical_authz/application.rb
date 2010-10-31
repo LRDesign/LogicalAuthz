@@ -25,7 +25,7 @@ module LogicalAuthz
 
     def strip_record(record)
       {
-        :rule => record[:determining_rule].name,
+        :rule => record[:determining_rule].try(:name),
         :logged_in => !record[:user].nil?,
         :reason => record[:reason],
         :result => record[:result]
