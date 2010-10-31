@@ -88,6 +88,10 @@ module LogicalAuthz
         @name = default_name
       end
 
+      def laz_debug
+        LogicalAuthz::laz_debug{yield} if block_given?
+      end
+
       attr_accessor :name, :decision
 
       def default_name
