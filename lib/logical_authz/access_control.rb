@@ -99,9 +99,9 @@ module LogicalAuthz
       end
 
       def evaluate(criteria)
-        Rails::logger.debug{"Rule being examined: #{self.inspect}"} if defined?(LAZ_DEBUG) and LAZ_DEBUG
+        laz_debug{"Rule being examined: #{self.inspect}"}
         if check(criteria) == true
-          Rails::logger.debug{"Rule: #@name triggered - authorization allowed: #@decision"} if defined?(LAZ_DEBUG) and LAZ_DEBUG
+          laz_debug{"Rule: #@name triggered - authorization allowed: #@decision"}
           return @decision
         else
           return nil
@@ -136,6 +136,10 @@ module LogicalAuthz
       def initialize(other)
         @other = other
         super()
+      end
+
+      def default_name
+        "Unless: #{@other.default_name}"
       end
 
       def check(criteria)
