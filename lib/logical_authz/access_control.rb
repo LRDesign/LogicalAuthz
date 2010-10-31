@@ -1,5 +1,7 @@
 module LogicalAuthz
   module AccessControl
+    class PolicyDefinitionError < ::Exception; end
+
     class Builder
       def initialize
         @list = @before = []
@@ -65,6 +67,11 @@ module LogicalAuthz
 
       def if_denied(&block)
         IfDenies.new(&block)
+      end
+
+      def related(&block)
+        raise PolicyDefinitionError, "related called without a block" if block.nil?
+        Owner.new(&block)
       end
 
       def except(policy) #This needs a different name
@@ -229,7 +236,12 @@ module LogicalAuthz
       def check(criteria)
         return false unless criteria.has_key?(:user) and criteria.has_key?(:id)
         unless @mapper.nil?
-          @mapper.call(criteria[:user], criteria[:id].to_i) rescue false
+          begin
+            @mapper.call(criteria[:user], criteria[:id].to_i)
+          rescue Object => ex
+            laz_debug{ "Exception raised checking relationship: #{ex.class.name}: #{ex.message}" }
+            return false
+          end
         else
           criteria[:user].id == criteria[:id].to_i
         end
