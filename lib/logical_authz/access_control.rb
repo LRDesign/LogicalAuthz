@@ -136,7 +136,7 @@ module LogicalAuthz
           return nil
         end
       rescue Object => ex
-        laz_debug{ "Exception raised checking rule \"#@name\": #{ex.class.name}: #{ex.message}" }
+        laz_debug{ "Exception raised checking rule \"#@name\": #{ex.class.name}: #{ex.message} @ #{ex.backtrace[0]}" }
         return nil
       end
 
