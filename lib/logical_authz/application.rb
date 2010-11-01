@@ -39,7 +39,8 @@ module LogicalAuthz
         :user => current_user, 
         :controller => self.class,
         :action => action_name, 
-        :id => params[:id]
+        :id => params[:id],
+        :params => params
       }
 
       logical_authz_record = {:authz_path => request.path.dup}
@@ -278,6 +279,8 @@ module LogicalAuthz
           deny :always
         end
       end
+
+      alias authorized_if_permitted needs_authorization
 
       #This method exists for backwards compatibility.  It's likely more 
       #readable to use the policy DSL
