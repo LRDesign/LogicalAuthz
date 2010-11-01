@@ -1,6 +1,6 @@
-#require 'logical_authz_helper'
 require 'logical_authz/access_control'
 require 'logical_authz/application'
+require 'logical_authz/configuration'
 
 module LogicalAuthz
   PermissionSelect = "controller = :controller AND " +
@@ -10,27 +10,6 @@ module LogicalAuthz
     "(subject_id IS NULL OR subject_id = :subject_id)))"
 
   class << self
-    def unauthorized_groups
-      return @unauthorized_groups unless @unauthorized_groups.nil?
-      groups = unauthorized_group_names.map do |name|
-        Group.find_by_name(name)
-      end
-      if Rails.configuration.cache_classes
-        @unauthorized_groups = groups 
-      end
-      return groups
-    end
-
-    def clear_unauthorized_groups
-      @unauthorized_groups = nil
-    end
-
-    attr_accessor :unauthorized_group_names
-
-    def unauthorized_group_names
-      @unauthorized_group_names ||= []
-    end
-
     def inspect_criteria(criteria)
       criteria.inject({}) do |hash, name_value|
         name, value = *name_value
@@ -83,7 +62,7 @@ module LogicalAuthz
       }
 
       laz_debug{ "LogicalAuthz: checking permissions: #{select_on.inspect}" }
-      allowed = LogicalAuthz::permission_model.exists?([PermissionSelect, select_on])
+      allowed = LogicalAuthz::Configuration::permission_model.exists?([PermissionSelect, select_on])
       unless allowed
         laz_debug{ "Denied: #{select_on.inspect}"}
       else

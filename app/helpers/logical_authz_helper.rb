@@ -1,35 +1,9 @@
+require 'logical_authz/configuration'
+
 module LogicalAuthz
   class << self
-    def set_permission_model(klass)
-      @perm_model = klass
-    end
-
-    def set_group_model(klass)
-      @group_model = klass
-    end
-
-    def permission_model
-      @perm_model || ::Permission rescue nil
-    end
-
-    def group_model
-      @group_model || ::Group rescue nil
-    end
-
-    def debug!
-      @debug = true
-    end
-
-    def no_debug
-      @debug = false
-    end
-
-    def debugging?
-      defined? @debug and @debug
-    end
-
     def laz_debug
-      if block_given? and LogicalAuthz::debugging?
+      if block_given? and LogicalAuthz::Configuration::debugging?
         Rails::logger::debug do 
           msg = yield
           String === msg ? msg : msg.inspect
@@ -109,6 +83,7 @@ module LogicalAuthz
       end
       if params.nil?
         true #We can't work out where it is, so we have no opinion
+        #XXX: Shouldn't this be false?
       else
         authorized?(params)
       end

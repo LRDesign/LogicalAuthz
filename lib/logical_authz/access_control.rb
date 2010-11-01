@@ -79,6 +79,12 @@ module LogicalAuthz
         Reversed.new(policy)
       end
 
+      def with_criteria(policy, &block)
+        raise PolicyDefinitionError, "with_criteria called without a block" if block.nil?
+        policy = resolve_rule(policy)
+        RemappedCriteria(policy, &block)
+      end
+
       def existing_policy
         @list = @after
       end
@@ -117,6 +123,9 @@ module LogicalAuthz
         else
           return nil
         end
+      rescue Object => ex
+        laz_debug{ "Exception raised checking rule \"#@name\": #{ex.class.name}: #{ex.message}" }
+        return nil
       end
 
       class << self
@@ -128,6 +137,18 @@ module LogicalAuthz
           Policy.names[name.to_sym] = self
           Policy.names["if_#{name}".to_sym] = self
         end
+      end
+    end
+
+    #The policy rule of last resort
+    class ProcPolicy < Policy
+      def initialize(&check)
+        @check = check
+        super()
+      end
+
+      def check(criteria)
+        @check.call(criteria)
       end
     end
 
@@ -155,6 +176,23 @@ module LogicalAuthz
 
       def check(criteria)
         !@other.check(criteria)
+      end
+    end
+
+    class RemappedCriteria < Policy
+      def initialize(other, &block)
+        @other = other
+        @block = block
+        super()
+      end
+
+      def default_name
+        "Remapped: #{@other.default_name}"
+      end
+
+      def check(criteria)
+        new_criteria = @block.call(criteria)
+        @other.check(new_criteria)
       end
     end
 
@@ -220,6 +258,25 @@ module LogicalAuthz
       end
     end
 
+    class Authorized < Policy
+      register :authorized
+
+      def default_name
+        "When Authorized"
+      end
+
+      #This probably needs some assurance that it cannot loop
+      def check(criteria)
+        criteria[:authorization_depth] ||= 0
+        criteria[:authorization_depth] += 1
+
+        unless criteria[:authorization_depth] > 10
+          raise "Authorization recursion limit reached" 
+        end
+
+        LogicalAuthz.is_authorized?(criteria)
+      end
+    end
 
     class Owner < Policy
       register :owner
@@ -230,7 +287,7 @@ module LogicalAuthz
       end
 
       def default_name
-        "Owner"
+        "Related"
       end
 
       def check(criteria)
@@ -239,7 +296,6 @@ module LogicalAuthz
           begin
             @mapper.call(criteria[:user], criteria[:id].to_i)
           rescue Object => ex
-            laz_debug{ "Exception raised checking relationship: #{ex.class.name}: #{ex.message}" }
             return false
           end
         else
@@ -250,6 +306,7 @@ module LogicalAuthz
 
     class Permitted < Policy
       register :permitted
+
       def initialize(specific_criteria = {})
         @criteria = specific_criteria
         super()
@@ -262,17 +319,6 @@ module LogicalAuthz
       def check(criteria)
         crits = criteria.merge(@criteria)
         return LogicalAuthz::check_permitted(crits)
-      end
-    end
-
-    class ProcPolicy < Policy
-      def initialize(&check)
-        @check = check
-        super()
-      end
-
-      def check(criteria)
-        @check.call(criteria)
       end
     end
   end

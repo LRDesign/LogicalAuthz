@@ -40,7 +40,7 @@ module LogicalAuthz
         :controller => self.class,
         :action => action_name, 
         :id => params[:id],
-        :params => params
+        :params => params.dup
       }
 
       logical_authz_record = {:authz_path => request.path.dup}
@@ -217,7 +217,7 @@ module LogicalAuthz
         #  criteria[:group] += LogicalAuthz::unauthorized_groups
         #end
         criteria[:group], not_groups = criteria[:group].partition do |group|
-          LogicalAuthz::group_model === group
+          LogicalAuthz::Configuration::group_model === group
         end
         Rails.logger.warn{ "Found in criteria[:groups]: #{not_groups.inspect}"} unless not_groups.empty?
         actions = [*criteria[:action]].compact
@@ -268,7 +268,7 @@ module LogicalAuthz
         policy(*actions) do
           allow if_allowed {
             deny :authenticated
-            allow AccessControl::Permitted.new({:group => LogicalAuthz.unauthorized_groups})
+            allow AccessControl::Permitted.new({:group => LogicalAuthz::Configuration.unauthorized_groups})
           }
           allow :permitted
           existing_policy

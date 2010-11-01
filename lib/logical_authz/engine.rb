@@ -1,4 +1,5 @@
 require 'rails'
+require 'logical_authz/configuration'
 
 module LogicalAuthz
   class Engine < Rails::Engine
@@ -11,5 +12,7 @@ module LogicalAuthz
     end
 
     config.eager_load_paths.unshift 'app/helpers'
+
+    config.logical_authz = Configuration
   end
 end
