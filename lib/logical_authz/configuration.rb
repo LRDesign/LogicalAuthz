@@ -4,6 +4,7 @@ module LogicalAuthz
   class Configuration
     class << self
       def policy_helper(name, &block)
+        require 'logical_authz/access_control'
         AccessControl::Builder.define_method(name, &block)
       end
 
