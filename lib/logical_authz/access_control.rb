@@ -3,6 +3,17 @@ module LogicalAuthz
     class PolicyDefinitionError < ::Exception; end
 
     class Builder
+      class << self
+        def register_policy_class(name, klass)
+          define_method(name) { klass.new }
+          define_method("if_" + name) { klass.new }
+        end
+
+        def register_policy_helper(name, &block)
+          define_method(name, &block)
+        end
+      end
+
       def initialize
         @list = @before = []
         @after = []
@@ -138,8 +149,7 @@ module LogicalAuthz
           Policy.names[name.to_sym] = self
           Policy.names["if_#{name}".to_sym] = self
 
-          AccessControl::Builder.define_method(name) { self.new }
-          AccessControl::Builder.define_method("if_#{name}") { self.new }
+          AccessControl::Builder.register_policy_class(name, self)
         end
       end
     end

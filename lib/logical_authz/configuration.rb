@@ -5,7 +5,7 @@ module LogicalAuthz
     class << self
       def policy_helper(name, &block)
         require 'logical_authz/access_control'
-        AccessControl::Builder.define_method(name, &block)
+        AccessControl::Builder.register_policy_helper(name, &block)
       end
 
       def unauthorized_groups
