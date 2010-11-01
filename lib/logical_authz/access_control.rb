@@ -18,6 +18,7 @@ module LogicalAuthz
         when Symbol, String
           klass = Policy.names[rule.to_sym]
           raise "Policy name #{rule} not found in #{Policy.names.keys.inspect}" if klass.nil?
+          Rails.logger.debug { "Using deprecated string/symbol policy naming: #{rule.inspect}" }
           rule = klass.new
         when Class
           rule = rule.new
@@ -82,7 +83,7 @@ module LogicalAuthz
       def with_criteria(policy, &block)
         raise PolicyDefinitionError, "with_criteria called without a block" if block.nil?
         policy = resolve_rule(policy)
-        RemappedCriteria(policy, &block)
+        RemappedCriteria.new(policy, &block)
       end
 
       def existing_policy
@@ -136,6 +137,9 @@ module LogicalAuthz
         def register(name)
           Policy.names[name.to_sym] = self
           Policy.names["if_#{name}".to_sym] = self
+
+          AccessControl::Builder.define_method(name) { self.new }
+          AccessControl::Builder.define_method("if_#{name}") { self.new }
         end
       end
     end
@@ -191,7 +195,7 @@ module LogicalAuthz
       end
 
       def check(criteria)
-        new_criteria = @block.call(criteria)
+        new_criteria = @block.call(criteria.dup)
         @other.check(new_criteria)
       end
     end

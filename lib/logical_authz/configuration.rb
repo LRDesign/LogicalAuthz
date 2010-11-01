@@ -3,6 +3,10 @@ module LogicalAuthz
   #config.logical_authz.{setting}
   class Configuration
     class << self
+      def policy_helper(name, &block)
+        AccessControl::Builder.define_method(name, &block)
+      end
+
       def unauthorized_groups
         return @unauthorized_groups unless @unauthorized_groups.nil?
         groups = unauthorized_group_names.map do |name|
