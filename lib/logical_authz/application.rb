@@ -158,8 +158,9 @@ module LogicalAuthz
         end
       end
 
-      # grant_aliases :new => :create  # =>
-      # anyone with :new permission can do :create
+      # grant_aliases :create => :new  # =>
+      # anyone with authorization to :create can also access :new
+      # (Read as: "create implies new")
       def grant_aliases(hash)
         aliases = read_inheritable_attribute(:grant_alias_hash) || Hash.new{|h,k| h[k] = []}
         aliased = read_inheritable_attribute(:aliased_grants) || {}
@@ -174,6 +175,10 @@ module LogicalAuthz
         write_inheritable_attribute(:aliased_grants, aliased)
       end
       
+      def standard_grant_aliases
+        grant_aliases :create => :new, :update => :edit
+      end
+
       def unalias_actions(actions)
         aliased_actions = read_inheritable_attribute(:aliased_grants) || {}
         actions.compact.map do |action|
