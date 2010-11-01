@@ -6,7 +6,7 @@ module LogicalAuthz
       class << self
         def register_policy_class(name, klass)
           define_method(name) { klass.new }
-          define_method("if_" + name) { klass.new }
+          define_method("if_#{name}") { klass.new }
         end
 
         def register_policy_helper(name, &block)
