@@ -287,7 +287,7 @@ module LogicalAuthz
         criteria[:authorization_depth] ||= 0
         criteria[:authorization_depth] += 1
 
-        unless criteria[:authorization_depth] > 10
+        if criteria[:authorization_depth] > 10
           raise "Authorization recursion limit reached" 
         end
 
