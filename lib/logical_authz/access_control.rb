@@ -206,9 +206,9 @@ module LogicalAuthz
 
       def check(criteria)
         new_criteria = criteria.dup
-        laz_debug{:Remapping => new_criteria}
+        laz_debug{ {:Remapping => new_criteria} }
         @block.call(new_criteria)
-        laz_debug{:Remappped => new_criteria}
+        laz_debug{ {:Remappped => new_criteria} }
         @other.check(new_criteria)
       end
     end
