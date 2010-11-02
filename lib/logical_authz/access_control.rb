@@ -205,7 +205,8 @@ module LogicalAuthz
       end
 
       def check(criteria)
-        new_criteria = @block.call(criteria.dup)
+        new_criteria = criteria.dup
+        @block.call(new_criteria)
         @other.check(new_criteria)
       end
     end
