@@ -313,6 +313,7 @@ module LogicalAuthz
           begin
             @mapper.call(criteria[:user], criteria[:id].to_i)
           rescue Object => ex
+            laz_debug{ :Mapping_exception => [ex.class.name, ex.message] }
             return false
           end
         else
