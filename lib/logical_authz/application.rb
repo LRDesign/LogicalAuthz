@@ -73,9 +73,29 @@ module LogicalAuthz
         end
       end
 
+      def policy_helper_module
+        @policy_helper_module ||= 
+          begin
+            mod = Module.new
+            parent_mod = read_inheritable_attribute(:policy_helper_module)
+            unless parent_mod.nil?
+              mod.include(parent_mod)
+            end
+            write_inheritable_attribute(:policy_helper_module, mod)
+            mod
+          end
+      end
+
+      def policy_helper(name, &body)
+        policy_helper_module.module_eval do
+          define_method :name, &body
+        end
+      end
+
       def policy(*actions, &block)
         before_filter CheckAuthorization
         builder = AccessControl::Builder.new
+        builder.extend(policy_helper_module)
         builder.define(&block)
         if actions.empty?
           set_policy(builder.list(get_policy(nil)), nil)

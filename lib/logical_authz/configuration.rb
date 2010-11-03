@@ -3,6 +3,7 @@ module LogicalAuthz
   #config.logical_authz.{setting}
   class Configuration
     class << self
+      #XXX is this redundant and confusing now?
       def policy_helper(name, &block)
         require 'logical_authz/access_control'
         AccessControl::Builder.register_policy_helper(name, &block)
