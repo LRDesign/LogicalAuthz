@@ -221,8 +221,8 @@ module LogicalAuthz
     class SubPolicy < Policy
       def initialize(helper_mod, &block)
         super()
-        builder = Builder.new
-        builder.define(helper_mod, &block)
+        builder = Builder.new(helper_mod)
+        builder.define(&block)
         @criteria_list = builder.list
       end
 
