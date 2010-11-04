@@ -19,7 +19,7 @@ module LogicalAuthz
         @list = @before = []
         @after = []
 
-        class << self
+        (class << self; self; end).instance_eval do
           include(helper_mod) unless helper_mod.nil?
         end
       end
