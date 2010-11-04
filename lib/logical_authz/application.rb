@@ -196,6 +196,7 @@ module LogicalAuthz
         write_inheritable_attribute(:grant_alias_hash, aliases)
         write_inheritable_attribute(:aliased_grants, aliased)
       end
+      alias grant_alias grant_aliases
       
       def standard_grant_aliases
         grant_aliases :create => :new, :update => :edit
