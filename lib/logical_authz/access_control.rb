@@ -19,7 +19,9 @@ module LogicalAuthz
         @list = @before = []
         @after = []
 
-        include(@helper_mod) unless @helper_mod.nil?
+        class << self
+          include(helper_mod) unless helper_mod.nil?
+        end
       end
 
       def define(&block)
