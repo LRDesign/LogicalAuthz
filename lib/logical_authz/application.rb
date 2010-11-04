@@ -79,7 +79,9 @@ module LogicalAuthz
             mod = Module.new
             parent_mod = read_inheritable_attribute(:policy_helper_module)
             unless parent_mod.nil?
-              mod.include(parent_mod)
+              mod.class_eval {
+                include(parent_mod)
+              }
             end
             write_inheritable_attribute(:policy_helper_module, mod)
             mod
