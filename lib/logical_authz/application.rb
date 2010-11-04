@@ -78,7 +78,6 @@ module LogicalAuthz
           begin
             mod = Module.new
             parent_mod = read_inheritable_attribute(:policy_helper_module)
-            p [self.name, parent_mod]
             unless parent_mod.nil?
               mod.class_eval {
                 include(parent_mod)
@@ -91,7 +90,7 @@ module LogicalAuthz
 
       def policy_helper(name, &body)
         policy_helper_module.module_eval do
-          define_method :name, &body
+          define_method name, &body
         end
       end
 
