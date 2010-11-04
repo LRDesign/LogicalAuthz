@@ -96,8 +96,7 @@ module LogicalAuthz
 
       def policy(*actions, &block)
         before_filter CheckAuthorization
-        builder = AccessControl::Builder.new
-        builder.extend(policy_helper_module)
+        builder = AccessControl::Builder.new(policy_helper_module)
         builder.define(&block)
         if actions.empty?
           set_policy(builder.list(get_policy(nil)), nil)

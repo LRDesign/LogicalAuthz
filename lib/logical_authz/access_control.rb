@@ -14,9 +14,12 @@ module LogicalAuthz
         end
       end
 
-      def initialize
+      def initialize(helper_mod = nil)
+        @helper_mod = helper_mod
         @list = @before = []
         @after = []
+
+        include(@helper_mod) unless @helper_mod.nil?
       end
 
       def define(&block)
@@ -74,11 +77,11 @@ module LogicalAuthz
       end
 
       def if_allowed(&block)
-        IfAllows.new(&block)
+        IfAllows.new(@helper_mod, &block)
       end
 
       def if_denied(&block)
-        IfDenies.new(&block)
+        IfDenies.new(@helper_mod, &block)
       end
 
       def related(&block)
@@ -214,10 +217,10 @@ module LogicalAuthz
     end
 
     class SubPolicy < Policy
-      def initialize(&block)
+      def initialize(helper_mod, &block)
         super()
         builder = Builder.new
-        builder.define(&block)
+        builder.define(helper_mod, &block)
         @criteria_list = builder.list
       end
 
