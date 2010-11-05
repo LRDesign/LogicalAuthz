@@ -24,7 +24,7 @@ module LogicalAuthz
 
       laz_debug{"Helper authorizing: #{LogicalAuthz.inspect_criteria(criteria)}"}
 
-      criteria = {:controller => controller_path, :action => action_name, :id => params[:id]}.merge(criteria)
+      criteria = {:controller => controller_path, :action => action_name, :id => params[:id], :params => params.dup}.merge(criteria)
       unless criteria.has_key?(:group) or criteria.has_key?(:user)
         controller = case self
                      when ActionView::Base
