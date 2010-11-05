@@ -141,8 +141,8 @@ module LogicalAuthz
           return nil
         end
       rescue Object => ex
-        laz_debug{ "Exception raised checking rule \"#@name\": #{ex.class.name}: #{ex.message} @ #{ex.backtrace[0]}" }
-        return nil
+        Rails.logger.info{ "Exception raised checking rule \"#@name\": #{ex.class.name}: #{ex.message} @ #{ex.backtrace[0..2].inspect}" }
+        return false
       end
 
       class << self
@@ -315,12 +315,7 @@ module LogicalAuthz
       def check(criteria)
         return false unless criteria.has_key?(:user) and criteria.has_key?(:id)
         unless @mapper.nil?
-          begin
-            @mapper.call(criteria[:user], criteria[:id].to_i)
-          rescue Object => ex
-            laz_debug{ {:Mapping_exception => [ex.class.name, ex.message] } }
-            return false
-          end
+          @mapper.call(criteria[:user], criteria[:id].to_i)
         else
           criteria[:user].id == criteria[:id].to_i
         end

@@ -179,9 +179,9 @@ module LogicalAuthz
         end
       end
 
-      # grant_aliases :create => :new  # =>
+      # grant_aliases :new => :create  # =>
       # anyone with authorization to :create can also access :new
-      # (Read as: "create implies new")
+      # (Read as: "for 'new' read 'create'")
       def grant_aliases(hash)
         aliases = read_inheritable_attribute(:grant_alias_hash) || Hash.new{|h,k| h[k] = []}
         aliased = read_inheritable_attribute(:aliased_grants) || {}
@@ -277,10 +277,8 @@ module LogicalAuthz
         result_hash.merge! :checked_rules => [], :determining_rule => nil, :all_rules => acl
         acl.each do |control|
           result_hash[:checked_rules] << control
-          laz_debug{"Checking rule: #{control.inspect}"}
           policy = control.evaluate(criteria)
           unless policy.nil?
-            laz_debug{"Rule triggered - result: #{policy.inspect}"}
             result_hash.merge! :determining_rule => control, :reason => :rule_triggered, :result => policy
             break 
           end
