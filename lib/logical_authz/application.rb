@@ -198,7 +198,7 @@ module LogicalAuthz
       alias grant_alias grant_aliases
       
       def standard_grant_aliases
-        grant_aliases :create => :new, :update => :edit
+        grant_aliases :edit => :update
       end
 
       def unalias_actions(actions)
@@ -279,6 +279,7 @@ module LogicalAuthz
           result_hash[:checked_rules] << control
           policy = control.evaluate(criteria)
           unless policy.nil?
+            laz_debug{"Rule triggered - result: #{policy.inspect}"}
             result_hash.merge! :determining_rule => control, :reason => :rule_triggered, :result => policy
             break 
           end
