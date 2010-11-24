@@ -265,7 +265,7 @@ module LogicalAuthz
         return controller_acl if action.nil?
         action = unalias_actions([action]).first
         action_acl = (read_inheritable_attribute(:action_access_control) || {})[action.to_sym] || []
-        laz_debug{ [action, (read_inheritable_attribute(:action_access_control) || {}).keys, action_acl, controller_acl] }
+        laz_debug{ :checking_policy_for => action, :policies_exist_for => (read_inheritable_attribute(:action_access_control) || {}).keys, :action_acl => action_acl, :controller_acl => controller_acl }
         action_acl + controller_acl
       end
 

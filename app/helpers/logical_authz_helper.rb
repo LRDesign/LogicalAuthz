@@ -105,7 +105,7 @@ module LogicalAuthz
         if block_given?
           yield
         else
-          name
+          ""
         end
       end
     end
@@ -118,7 +118,7 @@ module LogicalAuthz
         if block_given?
           yield
         else
-          name
+          ""
         end
       end
     end
@@ -131,7 +131,7 @@ module LogicalAuthz
         if block_given?
           yield
         else
-          name
+          ""
         end
       end
     end
@@ -144,7 +144,7 @@ module LogicalAuthz
         if block_given?
           yield
         else
-          name
+          ""
         end
       end
     end
