@@ -2,7 +2,7 @@ require 'rubygems'
 
 SPEC = Gem::Specification.new do |spec|
   spec.name		= "logical_authz"
-  spec.version		= "0.1.0"
+  spec.version		= "0.1.1"
   spec.author		= "Judson Lester"
   spec.email		= "judson@lrdesign.com"
   spec.summary		= "Full fledged authorization, starting from one line"
@@ -15,9 +15,12 @@ SPEC = Gem::Specification.new do |spec|
   EOD
 
   spec.rubyforge_project= spec.name.downcase
-  spec.homepage        = "http://#{spec.rubyforge_project}.rubyforge.org/"
+  spec.homepage             = "http://lrdesign.com/tools"
 
   spec.files		+= Dir.glob("lib/**/*")
+  spec.files		+= Dir.glob("app/**/*")
+  spec.files		+= Dir.glob("config/**/*")
+  spec.files		+= Dir.glob("generators/**/*")
   spec.files		+= Dir.glob("doc/**/*")
   spec.files		+= Dir.glob("spec/**/*")
 
