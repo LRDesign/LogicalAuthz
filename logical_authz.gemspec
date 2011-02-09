@@ -2,7 +2,7 @@ require 'rubygems'
 
 SPEC = Gem::Specification.new do |spec|
   spec.name		= "logical_authz"
-  spec.version		= "0.1.1"
+  spec.version		= "0.1.8"
   spec.author		= "Judson Lester"
   spec.email		= "judson@lrdesign.com"
   spec.summary		= "Full fledged authorization, starting from one line"

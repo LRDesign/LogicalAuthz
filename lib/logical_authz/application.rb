@@ -24,9 +24,10 @@ module LogicalAuthz
     end
 
     def strip_record(record)
+      laz_debug{"Logical Authz: stripping: #{record.inspect}"}
       {
         :rule => record[:determining_rule].try(:name),
-        :logged_in => !record[:user].nil?,
+        :logged_in => !(record[:criteria] || {})[:user].nil?,
         :reason => record[:reason],
         :result => record[:result]
       }
@@ -50,7 +51,10 @@ module LogicalAuthz
       if logical_authz_record[:result]
         return true
       else
-        request.session[:unauthzd_path] = request.path
+        request.session[:logical_authz] ||= {}
+        request.session[:logical_authz][:unauthzd_path] = request.path
+        flash[:logical_authz_last_denial] = flash[:logical_authz_record]
+
         redirect_to_lobby("Your account is not authorized to perform this action.")
         return false
       end
