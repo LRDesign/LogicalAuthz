@@ -106,52 +106,48 @@ module LogicalAuthz
       html_options ||= {}
       url = options
       if(authorized_url?(url, html_options))
-        link_to(name, options, html_options)
+        return link_to(name, options, html_options)
       else
         if block_given?
           yield
-        else
-          ""
         end
+        return ""
       end
     end
 
     def button_to_if_authorized(name, options = {}, html_options = {})
       url = options
       if(authorized_url?(url, html_options))
-        button_to(name, options, html_options)
+        return button_to(name, options, html_options)
       else
         if block_given?
           yield
-        else
-          ""
         end
+        return ""
       end
     end
 
     def link_to_remote_if_authorized(name, options = {}, html_options = nil)
       url = options[:url]
       if(authorized_url?(url, html_options))
-        link_to_remote(name, options, html_options)
+        return link_to_remote(name, options, html_options)
       else
         if block_given?
           yield
-        else
-          ""
         end
+        return ""
       end
     end
 
     def button_to_remote_if_authorized(name, options = {}, html_options = nil)
       url = options[:url]
       if(authorized_url?(url, html_options))
-        button_to_remote(name, options, html_options)
+        return button_to_remote(name, options, html_options)
       else
         if block_given?
           yield
-        else
-          ""
         end
+        return ""
       end
     end
   end
