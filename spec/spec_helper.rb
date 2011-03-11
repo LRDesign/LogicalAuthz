@@ -1,7 +1,8 @@
 ENV["RAILS_ENV"] ||= 'test'
+Dir[File::expand_path(__FILE__ + "/../support/**/*.rb")].each{|file| require file}
 
 $" << File.expand_path(File.join(File.dirname(__FILE__), '..','..','..','..','app','controllers','authz_controller.rb'))
-
+Ungemmer::ungem_gemspec
 
 require File.expand_path(File.join(File.dirname(__FILE__),'..','..','..','..','config','environment'))
 require 'spec/rails' 

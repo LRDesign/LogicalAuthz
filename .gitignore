@@ -53,8 +53,10 @@ coverage/
 artifacts/
 database.yml.backup/
 coverage*
-
 Capfile
 config/deploy.rb
 config/deploy*
 config/deploy/*
+_MTN
+_MTN/
+.mtn*
