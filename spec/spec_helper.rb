@@ -1,16 +1,14 @@
 ENV["RAILS_ENV"] ||= 'test'
-Dir[File::expand_path(__FILE__ + "/../support/**/*.rb")].each{|file| require file}
 
 $" << File.expand_path(File.join(File.dirname(__FILE__), '..','..','..','..','app','controllers','authz_controller.rb'))
-Ungemmer::ungem_gemspec
-
 require File.expand_path(File.join(File.dirname(__FILE__),'..','..','..','..','config','environment'))
 require 'spec/rails' 
 require 'logical_authz/spec_helper'
 
 # Requires supporting files with custom matchers and macros, etc,
 # in ./support/ and its subdirectories.
-Dir[File.expand_path(File.join(File.dirname(__FILE__),'support','**','*.rb'))].each {|f| require f}
+Dir[File::expand_path(__FILE__ + "/../support/**/*.rb")].each{|file| require file}
+Ungemmer::ungem_gemspec
 
 plugin_spec_dir = File.dirname(__FILE__)
 $: << File::join(plugin_spec_dir, "spec_helper", "models")
