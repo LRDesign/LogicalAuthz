@@ -1,9 +1,9 @@
 Gem::Specification.new do |spec|
   spec.name		= "logical_authz"
-  spec.version		= "0.1.10"
+  spec.version		= "0.2.0"
   author_list = { 
-    "Judson Lester" => "judson@lrdesign.com",
-    "Evan Dorn"     => "evan@lrdesign.com"
+    #"Evan Dorn"     => "evan@lrdesign.com",  #?
+    "Judson Lester" => "judson@lrdesign.com"
   }
   spec.authors		= author_list.keys
   spec.email		= spec.authors.map {|name| author_list[name]}
