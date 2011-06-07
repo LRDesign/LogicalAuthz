@@ -52,6 +52,7 @@ class SpecTask < RSpec::Core::RakeTask
   def initialize(name=:spec)
     super(name) do
       @ruby_opts = []
+      @bundle_opts = []
       @rspec_opts= %w{-f d --out last_run --color}
       @rcov_opts = %w{--exclude [^/]*\.gemspec,^spec/,^spec_help/ --sort coverage --threshold 101 -o doc/coverage --xrefs --no-color} 
       @rcov = true
@@ -71,7 +72,9 @@ class SpecTask < RSpec::Core::RakeTask
         cmd_parts = [*ruby_opts]
         cmd_parts << "-w" if warning?
         cmd_parts << "-S"
-        cmd_parts << "bundle exec" if gemfile? unless skip_bundler
+        if gemfile? and not skip_bundler
+          cmd_parts << %w{bundle} + @bundle_opts + %w{exec}
+        end
 
         if rcov
           cmd_parts += [*rcov_path]
@@ -107,6 +110,30 @@ end
 
 desc "Run failing examples if any exist, otherwise, run the whole suite"
 task :rspec => "rspec:quick"
+
+def rails_version(version, gemfile, app_root) 
+  namespace :env_set do
+    task version do
+      ENV["RAILS_ROOT"] = app_root
+    end
+  end
+
+  namespace :rspec do
+    namespace version do
+      SpecTask :all do
+        t.bundle_opts = ["--gemfile", gemfile]
+        if idx = t.rcov_opts.find("doc/coverage")
+          t.rcov_opts[idx] = "doc/#{version}/coverage"
+        end
+        t.files_to_run = "spec/#{version}/**/*.rb"
+      end
+      task :all => "env_set:#{version}"
+    end
+
+    task :all => "#{version}:all"
+  end
+end
+
 
 namespace :rspec do
   file "doc/coverage/index.html" => FileList['spec/**/*.rb', 'lib/**/*.rb'] do

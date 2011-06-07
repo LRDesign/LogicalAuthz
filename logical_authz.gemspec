@@ -19,15 +19,30 @@ Gem::Specification.new do |spec|
 
   spec.rubyforge_project= spec.name.downcase
   spec.homepage             = "http://lrdesign.com/tools"
-  spec.required_rubygems_version = Gem::Requirement.new(">= 0") if spec.respond_to? :required_rubygems_version=
+  if spec.respond_to? :required_rubygems_version=
+    spec.required_rubygems_version = Gem::Requirement.new(">= 0") 
+  end
 
   spec.files		= %w[
-    Gemfile
-    Gemfile.lock
-    LICENSE.txt
-    README.rdoc
-    Rakefile
-    VERSION
+    LICENSE
+    README
+    app/views/permissions/index.html.haml
+    app/views/permissions/create.rjs
+    app/views/permissions/new.html.haml
+    app/views/permissions/_controls.html.haml
+    app/views/permissions/_form.html.haml
+    app/views/permissions/edit.html.haml
+    app/views/groups/index.html.haml
+    app/views/groups/create.rjs
+    app/views/groups/new.html.haml
+    app/views/groups/_controls.html.haml
+    app/views/groups/_form.html.haml
+    app/views/groups/edit.html.haml
+    app/views/groups/show.html.haml
+    app/controllers/groups_controller.rb
+    app/controllers/permissions_controller.rb
+    app/controllers/groups_users_controller.rb
+    app/helpers/logical_authz_helper.rb
     lib/tasks/rspec.rake
     lib/logical_authz.rb
     lib/logical_authz/configuration.rb
@@ -56,25 +71,9 @@ Gem::Specification.new do |spec|
     lib/logical_authz/generators/models/templates/migrations/create_permissions.rb
     lib/logical_authz/generators/routes/generator.rb
     lib/logical_authz/engine.rb
+    lib/logical_authz/common.rb
     lib/logical_authz/access_control.rb
     lib/logical_authz/application.rb
-    app/views/permissions/index.html.haml
-    app/views/permissions/create.rjs
-    app/views/permissions/new.html.haml
-    app/views/permissions/_controls.html.haml
-    app/views/permissions/_form.html.haml
-    app/views/permissions/edit.html.haml
-    app/views/groups/index.html.haml
-    app/views/groups/create.rjs
-    app/views/groups/new.html.haml
-    app/views/groups/_controls.html.haml
-    app/views/groups/_form.html.haml
-    app/views/groups/edit.html.haml
-    app/views/groups/show.html.haml
-    app/controllers/groups_controller.rb
-    app/controllers/permissions_controller.rb
-    app/controllers/groups_users_controller.rb
-    app/helpers/logical_authz_helper.rb
     tasks/setup_logical_authz.rake
     generators/logical_authz_specs/logical_authz_specs_generator.rb
     generators/logical_authz/logical_authz_generator.rb
@@ -83,12 +82,6 @@ Gem::Specification.new do |spec|
     generators/logical_authz/templates/README
     generators/logical_authz_models/logical_authz_models_generator.rb
     generators/logical_authz_routes/logical_authz_routes_generator.rb
-    doc/README
-    spec/spec_helper.rb
-    spec/gem_test_suite.rb
-    spec/support/gem_test_suite.rb
-    spec/support/ungemmer.rb
-    spec/support/file-sandbox.rb
   ]
 
   spec.test_file        = "spec_help/gem_test_suite.rb"
@@ -96,7 +89,7 @@ Gem::Specification.new do |spec|
   spec.licenses = ["MIT"]
   spec.require_paths = %w[lib/]
   spec.rubygems_version = "1.3.5"
-  
+
   dev_deps = [
     ["rake-gemcutter", ">= 0.1.0"],
     ["hanna", "~> 0.1.0"],
@@ -112,11 +105,19 @@ Gem::Specification.new do |spec|
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
       dev_deps.each do |gem, versions|
         spec.add_development_dependency(gem, versions)
-    end
-  else
+      end
+    else
       dev_deps.each do |gem, versions|
         spec.add_dependency(gem, versions)
+      end
+    end
+  else
+    dev_deps.each do |gem, versions|
+      spec.add_dependency(gem, versions)
+    end
+
   end
+
 
   spec.has_rdoc		= true
   spec.extra_rdoc_files = Dir.glob("doc/**/*")

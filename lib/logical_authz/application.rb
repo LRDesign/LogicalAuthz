@@ -23,6 +23,17 @@ module LogicalAuthz
       end
     end
 
+    def redirect_to_last_unauthorized(message = nil)
+      message ||= "Login successful"
+      if (laz_session = session[:logical_authz]) && (unauthorized = laz_session[:unauthzd_path])
+        laz_debug{{:going_to_last_unauth => laz_session}.inspect}
+        redirect_to(unauthorized, :flash => {:success => message})
+      else
+        laz_debug{{:going_root => laz_session}.inspect}
+        redirect_to(:root, :flash => {:success => message})
+      end
+    end
+
     def strip_record(record)
       laz_debug{"Logical Authz: stripping: #{record.inspect}"}
       {

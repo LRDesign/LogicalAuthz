@@ -272,7 +272,7 @@ module LogicalAuthz
       register :authenticated
 
       def default_name
-        "Authenicated"
+        "Authenticated"
       end
 
       def check(criteria)

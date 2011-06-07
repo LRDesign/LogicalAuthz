@@ -1,1 +1,1 @@
-require 'logical_authz'
+require 'logical_authz/common'

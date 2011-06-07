@@ -1,4 +1,4 @@
-require 'logical_authz'
+require 'logical_authz/common'
 
 #TODO: R3 respond_with
 class GroupsController < AuthzController
