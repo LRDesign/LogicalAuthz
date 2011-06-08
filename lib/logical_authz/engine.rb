@@ -14,5 +14,9 @@ module LogicalAuthz
     config.eager_load_paths.unshift 'app/helpers'
 
     config.logical_authz = Configuration
+
+    initializer :require_common do
+      require 'logical_authz/common'
+    end
   end
 end
