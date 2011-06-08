@@ -1,6 +1,6 @@
 Gem::Specification.new do |spec|
   spec.name		= "logical_authz"
-  spec.version		= "0.2.0"
+  spec.version		= "0.2.1"
   author_list = { 
     #"Evan Dorn"     => "evan@lrdesign.com",  #?
     "Judson Lester" => "judson@lrdesign.com"
@@ -74,6 +74,7 @@ Gem::Specification.new do |spec|
     lib/logical_authz/common.rb
     lib/logical_authz/access_control.rb
     lib/logical_authz/application.rb
+    rails/init.rb
     tasks/setup_logical_authz.rake
     generators/logical_authz_specs/logical_authz_specs_generator.rb
     generators/logical_authz/logical_authz_generator.rb
@@ -84,7 +85,7 @@ Gem::Specification.new do |spec|
     generators/logical_authz_routes/logical_authz_routes_generator.rb
   ]
 
-  spec.test_file        = "spec_help/gem_test_suite.rb"
+  #spec.test_file        = "spec_help/gem_test_suite.rb"
   spec.homepage = "http://lrdesign.com/tools"
   spec.licenses = ["MIT"]
   spec.require_paths = %w[lib/]
