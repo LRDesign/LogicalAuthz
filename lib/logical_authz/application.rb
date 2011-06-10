@@ -9,17 +9,27 @@ module LogicalAuthz
 
     def redirect_to_lobby(message = nil)
       back = request.headers["Referer"]
-      laz_debug{"Sending user back to: #{back} Authz'd?"}
-      back_criteria = criteria_from_url(back)
-      if back_criteria.nil? 
-        laz_debug{"Back is nil - going to the default_unauthorized_url"}
-        redirect_to default_unauthorized_url
-      elsif LogicalAuthz::is_authorized?(back_criteria)
+      laz_debug{"Sending user back to: #{back.inspect} Authz'd?"}
+      back_criteria = criteria_from_url(back) #because back might be foreign
+      if !back.nil? and authorized?(back_criteria)
         laz_debug{"Back authorized - going to #{back}"}
         redirect_to back
       else
-        laz_debug{"Back is unauthorized - going to the default_unauthorized_url"}
-        redirect_to default_unauthorized_url
+        laz_debug{
+          if back_criteria.nil?
+            "Back is nil - trying authz fallback"
+          else
+            "Back is unauthorized - trying authz fallback"
+          end
+        }
+        #TODO: list of fallbacks, with defaults?
+        if authorized_url?(default_unauthorized_url)
+          laz_debug{"#{default_unauthorized_url} is authz'd - redirecting"}
+          redirect_to default_unauthorized_url
+        else
+          laz_debug{"#{default_unauthorized_url} is NOT authz'd - redirecting to #{root_url}"}
+          redirect_to root_url
+        end
       end
     end
 
@@ -33,6 +43,7 @@ module LogicalAuthz
         redirect_to(:root, :flash => {:success => message})
       end
     end
+    alias redirect_retry redirect_to_last_unauthorized
 
     def strip_record(record)
       laz_debug{"Logical Authz: stripping: #{record.inspect}"}
