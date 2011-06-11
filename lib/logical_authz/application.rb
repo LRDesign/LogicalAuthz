@@ -1,11 +1,11 @@
-require 'logical_authz_helper'
+#require 'logical_authz_helper'
 
 module LogicalAuthz
   module Application
     def self.included(klass)
       klass.extend(ClassMethods)
     end
-    include Helper
+    #include Helper
 
     def redirect_to_lobby(message = nil)
       back = request.headers["Referer"]

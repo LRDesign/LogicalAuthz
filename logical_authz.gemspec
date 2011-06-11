@@ -92,10 +92,9 @@ Gem::Specification.new do |spec|
   spec.rubygems_version = "1.3.5"
 
   dev_deps = [
-    ["rake-gemcutter", ">= 0.1.0"],
     ["hanna", "~> 0.1.0"],
     ["mailfactory", "~> 1.4.0"],
-    ["rspec", [">= 2.0"]],
+    ["rspec", [">= 2.5"]],
     ["bundler", ["~> 1.0.0"]],
     ["rcov", [">= 0"]]
   ]

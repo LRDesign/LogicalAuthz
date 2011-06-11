@@ -1,0 +1,6 @@
+--format documentation
+--out last_run
+-I /home/judson/ruby/LRD/LogicalAuthz/spec_help/interpose
+-I /home/judson/ruby/LRD/LogicalAuthz/lib
+-I /home/judson/ruby/LRD/LogicalAuthz/spec_help
+--require spec_helper

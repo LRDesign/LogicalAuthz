@@ -1,7 +1,7 @@
 require 'rubygems'
 require 'rubygems/installer'
 require 'rake/gempackagetask'
-require 'rake/gemcutter'
+#require 'rake/gemcutter'
 require 'hanna/rdoctask'
 require 'rspec/core/rake_task'
 require 'mailfactory'
@@ -238,7 +238,7 @@ namespace :qa do
   end
 end
 
-Rake::Gemcutter::Tasks.new(RakeConfig[:gemspec])
+#Rake::Gemcutter::Tasks.new(RakeConfig[:gemspec])
 namespace :gem do
   task :push => 'qa:sign_off'
   task :install => [:needs_root, 'qa:sign_off']
