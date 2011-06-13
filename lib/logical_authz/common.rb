@@ -1,8 +1,11 @@
 require 'logical_authz/access_control'
 require 'logical_authz/application'
 require 'logical_authz/configuration'
+require 'logical_authz/debug'
 
 module LogicalAuthz
+  include Debug
+
   PermissionSelect = "controller = :controller AND " +
     "group_id IN (:group_ids) AND " +
     "((action IS NULL AND subject_id IS NULL) OR " +

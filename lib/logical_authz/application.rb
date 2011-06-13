@@ -1,7 +1,9 @@
-#require 'logical_authz_helper'
+require 'logical_authz/debug'
 
 module LogicalAuthz
   module Application
+    include Debug
+
     def self.included(klass)
       klass.extend(ClassMethods)
     end
@@ -83,10 +85,6 @@ module LogicalAuthz
     end
 
     module ClassMethods
-      def laz_debug
-        LogicalAuthz::laz_debug{yield} if block_given?
-      end
-
       def publicly_allowed(*actions)
         if actions.empty?
           authorization_by_default(true)

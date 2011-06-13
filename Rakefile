@@ -6,6 +6,9 @@ require 'hanna/rdoctask'
 require 'rspec/core/rake_task'
 require 'mailfactory'
 require 'net/smtp'
+require 'spec_help/support/application'
+
+Testing::Application.load_tasks
 
 begin
   speclist = Dir[File.expand_path(__FILE__ +'/../*.gemspec')]

@@ -3,7 +3,7 @@ require 'rails/all'
 #Gratefully borrowed from Thoughtbot's Diesel gem
 
 module Testing
-  APP_ROOT = File.expand_path('..', __FILE__).freeze
+  APP_ROOT = File::dirname(__FILE__).freeze
 
   class Application < Rails::Application
     config.encoding = "utf-8"

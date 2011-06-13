@@ -26,9 +26,14 @@ class User < ActiveRecord::Base
 end
 
 
-Dir[Rails.root.join("spec/support/**/*.rb")].each {|f| require f}
+Dir[Rails.root.join("spec_help/support/**/*.rb")].each {|f| require f}
 
 RSpec.configure do |config|
   config.use_transactional_fixtures = true
   config.backtrace_clean_patterns << %r{gems/}
+end
+
+$db_seq_num = 0
+def seq
+  return $db_seq_num += 1
 end
