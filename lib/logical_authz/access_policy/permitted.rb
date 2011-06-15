@@ -1,12 +1,6 @@
 module LogicalAuthz
   module AccessPolicy
     class Permitted < Rule
-      PermissionSelect = "controller = :controller AND " +
-        "group_id IN (:group_ids) AND " +
-        "((action IS NULL AND subject_id IS NULL) OR " +
-        "(action IN (:action_names) AND " +
-        "(subject_id IS NULL OR subject_id = :subject_id)))"
-
       register :permitted
 
       def initialize(specific_criteria = {})
@@ -87,7 +81,7 @@ module LogicalAuthz
                             criteria[:id])
 
         if Permission.count_by_sql(query.project(Arel.sql('*').count).to_sql) > 0
-          laz_debug{ "Permitted: #{query.to_sql}"}
+          laz_debug{ "Permitted" }
           return true
         else
           laz_debug{ "Not permitted: 0 rows returned"}
