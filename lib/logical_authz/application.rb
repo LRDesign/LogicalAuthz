@@ -1,8 +1,10 @@
 require 'logical_authz/debug'
+require 'logical_authz/policy_enforcement'
 
 module LogicalAuthz
   module Application
     include Debug
+    include PolicyEnforcement
 
     def self.included(klass)
       klass.extend(ClassMethods)
@@ -25,13 +27,17 @@ module LogicalAuthz
           end
         }
         #TODO: list of fallbacks, with defaults?
-        if authorized_url?(default_unauthorized_url)
-          laz_debug{"#{default_unauthorized_url} is authz'd - redirecting"}
-          redirect_to default_unauthorized_url
-        else
-          laz_debug{"#{default_unauthorized_url} is NOT authz'd - redirecting to #{root_url}"}
-          redirect_to root_url
+        LogicalAuthz::Configuration.divert_urls.each do |url|
+
+          if authorized_url?(url)
+            laz_debug{"#{url} is authz'd - redirecting"}
+            redirect_to url
+            return
+          else
+            laz_debug{"#{url} is NOT authz'd - trying next"}
+          end
         end
+        redirect_to root_url
       end
     end
 
@@ -70,8 +76,9 @@ module LogicalAuthz
 
       logical_authz_record = {:authz_path => request.path.dup}
       LogicalAuthz.is_authorized?(criteria, logical_authz_record)
-      laz_debug{"Logical Authz result: #{logical_authz_record.inspect}"}
+      laz_debug{"Result: #{logical_authz_record.inspect}"}
       flash[:logical_authz_record] = strip_record(logical_authz_record)
+      laz_debug{"Stripped to: #{flash[:logical_authz_record].inspect}"}
       if logical_authz_record[:result]
         return true
       else
@@ -85,6 +92,8 @@ module LogicalAuthz
     end
 
     module ClassMethods
+      include Debug
+
       def publicly_allowed(*actions)
         if actions.empty?
           authorization_by_default(true)
@@ -120,7 +129,7 @@ module LogicalAuthz
 
       def policy(*actions, &block)
         before_filter CheckAuthorization
-        builder = AccessControl::Builder.new(policy_helper_module)
+        builder = AccessPolicy::Builder.new(policy_helper_module)
         builder.define(&block)
         if actions.empty?
           set_policy(builder.list(get_policy(nil)), nil)
@@ -243,34 +252,16 @@ module LogicalAuthz
         end
       end
 
-      def inspect_criteria(criteria)
-        criteria.inject({}) do |hash, name_value|
-          name, value = *name_value
-          case value
-          when ActiveRecord::Base
-            hash[name] = {value.class.name => value.id}
-          when ActionController::Base
-            hash[name] = value.class
-          else
-            hash[name] = value
-          end
-
-          hash
-        end.inspect
-      end
-
       def normalize_criteria(criteria)
-        criteria[:group] = criteria[:group].nil? ? [] : [*criteria[:group]]
+        criteria[:roles] = criteria[:roles].nil? ? [] : [*criteria[:roles]]
         if criteria.has_key?(:user) and not criteria[:user].nil?
-          criteria[:group] += criteria[:user].groups
+          criteria[:roles] += criteria[:user].roles
         end
-        #if criteria[:group].empty?
-        #  criteria[:group] += LogicalAuthz::unauthorized_groups
-        #end
-        criteria[:group], not_groups = criteria[:group].partition do |group|
-          LogicalAuthz::Configuration::group_model === group
+        criteria[:roles], not_roles = criteria[:roles].partition do |roles|
+          Role === roles
         end
-        Rails.logger.warn{ "Found in criteria[:groups]: #{not_groups.inspect}"} unless not_groups.empty?
+        Rails.logger.warn{ "Found in criteria[:roles]: #{not_roles.inspect}"} unless not_roles.empty?
+
         actions = [*criteria[:action]].compact
         criteria[:action_aliases] = actions.map do |action|
           grant_aliases_for(action)
@@ -317,10 +308,10 @@ module LogicalAuthz
       def needs_authorization(*actions)
         policy(*actions) do
           allow if_allowed {
-            deny :authenticated
-            allow AccessControl::Permitted.new({:group => LogicalAuthz::Configuration.unauthorized_groups})
+            deny authenticated
+            allow if_permitted(:roles => LogicalAuthz::Configuration.unauthorized_roles)
           }
-          allow :permitted
+          allow if_permitted
           existing_policy
         end
 
@@ -345,7 +336,7 @@ module LogicalAuthz
       #readable to use the policy DSL
       def owner_authorized(*actions, &block)
         policy(*actions) do |pol|
-          allow AccessControl::Owner.new(&block)
+          allow if_owner(&block)
           existing_policy
         end
       end
@@ -354,7 +345,7 @@ module LogicalAuthz
       #readable to use the policy DSL
       def admin_authorized(*actions)
         policy(*actions) do |pol|
-          allow :if_admin
+          allow if_admin
           existing_policy
         end
       end

@@ -5,11 +5,16 @@ class PermittedTestController < ApplicationController
   end
 
   def create
-    redirect_to :index
+    redirect_to :action => :index
   end
 
-  def index; end
-  def show; end
+  def index
+    redirect_to :action => :index
+  end
+
+  def show
+    redirect_to :action => :index
+  end
 end
 
 class FoosController < PermittedTestController
@@ -28,27 +33,27 @@ describe "Permitted rule", :type => :controller do
 
   let! :controller_permission do
     Permission.create(:role_name => "member", :role_range_id => group.id, 
-                      :controller => "foo")
+                      :controller => "foos")
   end
 
   let! :action_permission do
     Permission.create(:role_name => "member", :role_range_id => group.id, 
-                      :controller => "bar", :action => "show")
+                      :controller => "bars", :action => "show")
   end
 
   let! :id_permission do
     Permission.create(:role_name => "member", :role_range_id => group.id, 
-                      :controller => "wire", :action => "show", :subject_id => 1)
+                      :controller => "wires", :action => "show", :subject_id => 1)
   end
 
   let :authorized_user do
-    Users.create("user_#{seq}").tap do |user|
-      Roles.create(:authnd_id => user.id, :role_name => "member", :role_range_id => group.id)
+    User.create("user_#{seq}").tap do |user|
+      role = Role.create(:authnd_id => user.id, :role_name => "member", :role_range_id => group.id)
     end
   end
 
   let (:unauthorized_user) do 
-    Users.create("user_#{seq}")
+    User.create("user_#{seq}")
   end
 
   before do
@@ -87,7 +92,7 @@ describe "Permitted rule", :type => :controller do
       end
 
       it "should be permitted by the controller to :show" do
-        get :show
+        get :show, :id => 1
         controller.should be_authorized
       end
     end

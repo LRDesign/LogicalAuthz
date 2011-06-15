@@ -1,4 +1,5 @@
 require 'rails/all'
+require 'logical_authz'
 
 #Gratefully borrowed from Thoughtbot's Diesel gem
 
@@ -22,6 +23,9 @@ module Testing
     config.action_mailer.delivery_method = :test
     config.active_support.deprecation = :stderr
     config.secret_token = "DIESEL" * 5 # so diesel
+
+    config.logical_authz.debug!
+    config.logical_authz.raise_policy_exceptions!
 
     def require_environment!
       initialize!

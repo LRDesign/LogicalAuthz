@@ -6,9 +6,10 @@ $LOAD_PATH << File.join(PROJECT_ROOT, "lib")
 require 'rails/all'
 Bundler.require
 
-require 'spec_help/support/application'
 require 'logical_authz'
 require 'logical_authz/common'
+require 'logical_authz/spec_helper'
+require 'spec_help/support/application'
 
 class ApplicationController < ActionController::Base
   include LogicalAuthz::Application

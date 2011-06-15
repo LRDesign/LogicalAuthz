@@ -1,5 +1,6 @@
+class PermissionsController < ApplicationController
+  include LogicalAuthz::Application
 
-class PermissionsController < AuthzController                
   needs_authorization
   admin_authorized
 

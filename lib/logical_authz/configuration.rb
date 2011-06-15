@@ -5,47 +5,64 @@ module LogicalAuthz
     class << self
       #XXX is this redundant and confusing now?
       def policy_helper(name, &block)
-        require 'logical_authz/access_control'
-        AccessControl::Builder.register_policy_helper(name, &block)
+        require 'logical_authz/access_policy/dsl'
+        AccessPolicy::Builder.register_policy_helper(name, &block)
       end
 
-      def unauthorized_groups
-        return @unauthorized_groups unless @unauthorized_groups.nil?
-        groups = unauthorized_group_names.map do |name|
-          Group.find_by_name(name)
+      def unauthorized_roles
+        return @unauthorized_roles unless @unauthorized_roles.nil?
+        roles = unauthorized_role_names.map do |name|
+          Role.find_by_name(name)
         end
         if Rails.configuration.cache_classes
-          @unauthorized_groups = groups 
+          @unauthorized_roles = roles 
         end
-        return groups
+        return roles
       end
 
-      def clear_unauthorized_groups
-        @unauthorized_groups = nil
+      def clear_unauthorized_roles
+        @unauthorized_roles = nil
       end
 
-      def unauthorized_group_names=(array)
-        @unauthorized_group_names = array
+      def unauthorized_role_names=(array)
+        @unauthorized_role_names = array
       end
 
-      def unauthorized_group_names
-        @unauthorized_group_names ||= []
+      def unauthorized_role_names
+        @unauthorized_role_names ||= []
       end
 
       def permission_model=(klass)
         @perm_model = klass
       end
 
-      def group_model=(klass)
-        @group_model = klass
-      end
-
       def permission_model
         @perm_model || ::Permission rescue nil
       end
 
-      def group_model
-        @group_model || ::Group rescue nil
+      def divert_urls
+        @divert_urls ||= ["/"] 
+      end
+
+      def divert_urls=(list)
+        @divert_urls = list
+      end
+
+      def admin_role?(role)
+        return (role.name == "member" and 
+                Group.find(role.role_range_id).name == "Administrators")
+      end
+
+      def admin_role(&block)
+        define_method :admin_role?, &block
+      end
+
+      def raise_policy_exceptions!
+        @raise_policy_exceptions = true
+      end
+
+      def raise_policy_exceptions?
+        defined? @raise_policy_exceptions and @raise_policy_exceptions 
       end
 
       def debug!

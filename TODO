@@ -6,3 +6,13 @@ Group::members alias for the member class?  (::users etc)
 Groups -> Roles
 
 Roles with scopes
+
+
+"criteria" is a terrible name - it describes something that isn't a criteria.
+
+What I need is a name for "the traits of an access request that will be
+evaluated to determine if the request conforms to policy" - that found, I need to rename "criteria" everywhere to... whatever it is.
+
+
+Authorized Menu: render in a block - if any authorization decision is 
+"allow", render the captured block, otherwise discard.
