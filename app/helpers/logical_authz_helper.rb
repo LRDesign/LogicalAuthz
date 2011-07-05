@@ -30,7 +30,7 @@ module LogicalAuthz
 
     def laz_debug
       if block_given? and LogicalAuthz::debugging?
-        Rails::logger::debug do 
+        Rails::logger::debug do
           msg = yield
           String === msg ? msg : msg.inspect
         end
@@ -58,13 +58,13 @@ module LogicalAuthz
       result = LogicalAuthz.is_authorized?(criteria)
 
       return result
-    end 
-        
+    end
+
     # returns an array of group names and ids (suitable for select_tag)
     # for which <user> is not a member
     def nonmembered_groups(user)
       (LogicalAuthz::group_model.all - user.groups).map { |g| [ g.name, g.id ] }
-    end    
+    end
 
     def groups
       LogicalAuthz::group_model.all.map do |group|
@@ -85,7 +85,7 @@ module LogicalAuthz
       querystring = uri.query
       http_method = (html_options.nil? ? nil : html_options[:method]) || :get
       begin
-        params = ActionController::Routing::Routes.recognize_path(path, :method => http_method)
+        params = ActionController::Routing::Routes.recognize_path(path.to_str, :method => http_method)
       rescue ActionController::RoutingError => ex
         Rails.logger.info{"Asked to authorize url: #{html_options.inspect} - couldn't route: #{ex.class.name}: #{ex.message}"}
         return nil
